@@ -36,7 +36,6 @@ export default async function FilePage(props: {
   const problem = decodeURIComponent(params.problem);
   const file = decodeURIComponent(params.file);
 
-  console.log("Hello");
   return (
     <div className="flex min-h-screen justify-center py-4">
       <div className="mx-auto w-4/5">

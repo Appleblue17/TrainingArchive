@@ -1,5 +1,5 @@
 import "@/lib/globals.css";
-import { inter } from "../../public/fonts/fonts";
+import { inter } from "@public/fonts/fonts";
 
 export const experimental_ppr = true;
 

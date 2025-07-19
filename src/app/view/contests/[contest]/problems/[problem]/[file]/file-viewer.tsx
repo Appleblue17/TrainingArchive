@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import FileViewerPDFWrapper from "./file-viewer-pdf-wrapper";
+import FileViewerSource from "./file-viewer-source";
 
 export default function FileViewer({
   contest,
@@ -19,6 +20,11 @@ export default function FileViewer({
       const pdfPath = path.join("/contests", contest, "problems", problem, file);
 
       return <FileViewerPDFWrapper pdfPath={pdfPath} />;
+    }
+    if (ext === ".md") {
+    } else {
+      // Source code or other file types can be handled here
+      return <FileViewerSource code={fs.readFileSync(filePath, "utf-8")} ext={ext} />;
     }
   } else
     return (

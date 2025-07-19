@@ -64,7 +64,7 @@ export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
     if (containerRef.current && pageRefs.current[inputPage - 1]) {
       const container = containerRef.current;
       const pageEl = pageRefs.current[inputPage - 1] || document.createElement("div");
-      // 记录当前页距离容器顶部的距离
+      // Record the current page's position in the viewport
       const offset = pageEl.offsetTop - container.scrollTop;
       setScale(newScale);
       setPendingScroll(offset);
@@ -77,7 +77,7 @@ export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
     if (pendingScroll !== null && containerRef.current && pageRefs.current[inputPage - 1]) {
       const container = containerRef.current;
       const pageEl = pageRefs.current[inputPage - 1] || document.createElement("div");
-      // 恢复当前页在视口中的位置
+      // Resume the current page's position in the viewport
       container.scrollTop = pageEl.offsetTop - pendingScroll;
       setPendingScroll(null);
     }
@@ -153,26 +153,6 @@ export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
           ))}
         </Document>
       </div>
-      {/* Footer: 页码和翻页按钮 */}
-      {/* <div className="mt-2 flex shrink-0 gap-2 px-4 pb-4">
-        <button
-          onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
-          disabled={pageNumber <= 1}
-          className="rounded bg-gray-700 px-2 py-1 text-white"
-        >
-          Prev
-        </button>
-        <span className="text-gray-200">
-          Page {pageNumber} of {numPages}
-        </span>
-        <button
-          onClick={() => setPageNumber((p) => Math.min(numPages || 1, p + 1))}
-          disabled={numPages ? pageNumber >= numPages : true}
-          className="rounded bg-gray-700 px-2 py-1 text-white"
-        >
-          Next
-        </button>
-      </div> */}
     </div>
   );
 }

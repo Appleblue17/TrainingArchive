@@ -1,6 +1,9 @@
 {
-    "id": "A",
-    "name": "AGI",
-    "time_limit": 2,
-    "memory_limit": 1024
+  "name": "AGI",
+  "time_limit": "2.0 s",
+  "memory_limit": "1024 MB",
+  "link": "https://contest.ucup.ac/contest/2135/problem/12150",
+  "solved": true,
+  "solved_in_contest": false,
+  "solved_time": "02:44:10"
 }

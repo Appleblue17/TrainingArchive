@@ -7,6 +7,7 @@ import { FiAlertCircle, FiCheck, FiChevronRight, FiFileText } from "react-icons/
 import { ProblemInfoType, ContestInfoType, FileMetadataType } from "../../../lib/types";
 
 import MetaDataDisplay, { formatDate } from "@/components/metadata-display";
+import { PREFIX_URL } from "@/lib/global";
 
 export default function ContestTable({ contests }: { contests: ContestInfoType[] }) {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
@@ -151,7 +152,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                           {contest.files.map((file, idx) => (
                             <div key={idx} className="flex items-center justify-between">
                               <a
-                                href={path.join("/view", contest.rel_path, file.name!)}
+                                href={path.join(PREFIX_URL, "view", contest.rel_path, file.name!)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-gray-100 transition-colors hover:text-blue-300"
@@ -201,7 +202,12 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                     className="flex items-center justify-between"
                                   >
                                     <a
-                                      href={path.join("/view", problem.rel_path, file.name!)}
+                                      href={path.join(
+                                        PREFIX_URL,
+                                        "view",
+                                        problem.rel_path,
+                                        file.name!,
+                                      )}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="p-2 text-gray-100 transition-colors hover:text-blue-300"
@@ -235,7 +241,12 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                         <span className="ml-1 text-gray-400">B</span>
                                       </span>
                                       <a
-                                        href={path.join("/view", problem.rel_path, codeFile.name!)}
+                                        href={path.join(
+                                          PREFIX_URL,
+                                          "view",
+                                          problem.rel_path,
+                                          codeFile.name!,
+                                        )}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-gray-100 transition-colors hover:text-blue-300"

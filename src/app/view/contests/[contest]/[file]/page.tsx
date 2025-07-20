@@ -11,47 +11,36 @@ export async function generateStaticParams() {
 
   const params = [];
   for (const contest of contests) {
-    const problemsDir = path.join(contestsDir, contest, "problems");
-    if (!fs.existsSync(problemsDir)) continue;
-    const problems = fs.readdirSync(problemsDir);
-    for (const problem of problems) {
-      const problemPath = path.join(problemsDir, problem);
-      const files = fs.readdirSync(problemPath);
-      for (const file of files) {
-        params.push({
-          contest,
-          problem,
-          file,
-        });
-      }
+    const contestDir = path.join(contestsDir, contest);
+    if (!fs.existsSync(contestDir)) continue;
+    const files = fs.readdirSync(contestDir);
+    for (const file of files) {
+      params.push({
+        contest,
+        file,
+      });
     }
   }
   return params;
 }
 
 export default async function FilePage(props: {
-  params: Promise<{ contest: string; problem: string; file: string }>;
+  params: Promise<{ contest: string; file: string }>;
 }) {
   const params = await props.params;
   const contest = decodeURIComponent(params.contest);
-  const problem = decodeURIComponent(params.problem);
   const file = decodeURIComponent(params.file);
 
-  const rawFilePath = "/" + path.join("contests", contest, "problems", problem, file);
+  const rawFilePath = "/" + path.join("contests", contest, file);
 
   const contestMetadata = getFileMetadata(
     path.join(process.cwd(), "contests", contest),
     path.join(process.cwd(), "contests", contest, "contest.json"),
   );
 
-  const problemMetadata = getFileMetadata(
-    path.join(process.cwd(), "contests", contest, "problems", problem),
-    path.join(process.cwd(), "contests", contest, "problems", problem, "problem.json"),
-  );
-
   const fileMetadata = getFileMetadata(
-    path.join(process.cwd(), "contests", contest, "problems", problem, file),
-    path.join(process.cwd(), "contests", contest, "problems", problem, file + ".json"),
+    path.join(process.cwd(), "contests", contest, file),
+    path.join(process.cwd(), "contests", contest, file + ".json"),
   );
 
   return (
@@ -62,8 +51,6 @@ export default async function FilePage(props: {
           <p className="ml-4 mt-2 text-base text-gray-400">
             <span className="px-2 text-lg text-gray-200">/</span>
             {contest}
-            <span className="px-2 text-lg text-slate-300">/</span>
-            {problem}
             <span className="px-2 text-lg text-slate-300">/</span>
             {file}
           </p>
@@ -90,14 +77,10 @@ export default async function FilePage(props: {
         <main className="mt-4 flex w-full items-center justify-center">
           <main className="flex w-full items-start justify-center gap-4">
             <div className="flex-grow">
-              <FileViewer
-                dirPath={path.join("contests", contest, "problems", problem)}
-                fileName={file}
-              />
+              <FileViewer dirPath={path.join("contests", contest)} fileName={file} />
             </div>
             <div className="flex-shrink-0 basis-1/5 space-y-2">
               <MetaDataDisplay name={"File"} metadata={fileMetadata} />
-              <MetaDataDisplay name={"Problem"} metadata={problemMetadata} />
               <MetaDataDisplay name={"Contest"} metadata={contestMetadata} />
             </div>
           </main>

@@ -4,6 +4,8 @@ import FileViewerPDFWrapper from "./file-viewer-pdf-wrapper";
 import FileViewerSource from "./file-viewer-source";
 import FileViewerMarkdownWrapper from "./file-viewer-markdown-wrapper";
 
+import { BASE_URL } from "@/lib/global";
+
 export default function FileViewer({
   contest,
   problem,
@@ -24,7 +26,7 @@ export default function FileViewer({
     }
     if (ext === ".md") {
       // For Markdown files, use remark to convert to HTML
-      const dirPath = path.join("http://localhost:3000/", "contests", contest, "problems", problem);
+      const dirPath = path.join(BASE_URL, "contests", contest, "problems", problem);
       return (
         <FileViewerMarkdownWrapper dirPath={dirPath} raw={fs.readFileSync(filePath, "utf-8")} />
       );

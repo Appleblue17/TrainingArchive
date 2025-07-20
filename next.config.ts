@@ -2,9 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    ppr: 'incremental'
-  },
+  output: "export",
+  basePath: "/Training-Archive",
+  assetPrefix: "/Training-Archive/",
 };
 
 export default nextConfig;

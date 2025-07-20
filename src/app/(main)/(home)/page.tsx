@@ -16,7 +16,6 @@ function getFilesInfo(directory: string) {
       return fs.statSync(fullPath).isFile() && allowedExtensions.includes(ext) && ext !== ".json";
     })
     .map((file) => {
-      console.log("File:", file);
       return getFileMetadata(path.join(directory, file), path.join(directory, file + ".json"));
     })
     .filter((file) => file !== null);

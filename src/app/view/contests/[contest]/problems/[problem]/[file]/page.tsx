@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 import FileViewer from "./file-viewer";
 import { FiDownload, FiFileText } from "react-icons/fi";
+import getFileMetadata from "@/utils/get-file-metadata";
+import MetaDataDisplay from "@/components/metadata-display";
 
 export async function generateStaticParams() {
   const contestsDir = path.join(process.cwd(), "contests");
@@ -27,29 +29,8 @@ export async function generateStaticParams() {
   return params;
 }
 
-async function getFileMetadata(filePath: string, metadataPath: string) {
-  const stats = await fs.promises.stat(filePath);
-
-  const metadata: { [key: string]: any } = {
-    name: path.basename(filePath),
-    modified_time: stats.mtime,
-  };
-  if (stats.isFile()) {
-    metadata.size = stats.size; // Size in bytes
-  }
-
-  // Check if metadata file exists
-  if (fs.existsSync(metadataPath)) {
-    const metadataContent = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
-    Object.assign(metadata, metadataContent);
-  }
-  return metadata;
-}
-
 export default async function FilePage(props: {
-  params:
-    | { contest: string; problem: string; file: string }
-    | Promise<{ contest: string; problem: string; file: string }>;
+  params: Promise<{ contest: string; problem: string; file: string }>;
 }) {
   const params = await props.params;
   const contest = decodeURIComponent(params.contest);
@@ -58,22 +39,20 @@ export default async function FilePage(props: {
 
   const rawFilePath = "/" + path.join("contests", contest, "problems", problem, file);
 
-  const contestMetadata = await getFileMetadata(
+  const contestMetadata = getFileMetadata(
     path.join(process.cwd(), "contests", contest),
     path.join(process.cwd(), "contests", contest, "contest.json"),
   );
 
-  const problemMetadata = await getFileMetadata(
+  const problemMetadata = getFileMetadata(
     path.join(process.cwd(), "contests", contest, "problems", problem),
     path.join(process.cwd(), "contests", contest, "problems", problem, "problem.json"),
   );
 
-  const fileMetadata = await getFileMetadata(
+  const fileMetadata = getFileMetadata(
     path.join(process.cwd(), "contests", contest, "problems", problem, file),
     path.join(process.cwd(), "contests", contest, "problems", problem, file + ".json"),
   );
-
-  console.log(rawFilePath);
 
   return (
     <div className="flex min-h-screen justify-center py-4">
@@ -113,97 +92,13 @@ export default async function FilePage(props: {
             <div className="flex-grow">
               <FileViewer contest={contest} problem={problem} file={file} />
             </div>
-            <div className="flex-shrink-0 basis-1/5">
+            <div className="flex-shrink-0 basis-1/5 space-y-2">
               <MetaDataDisplay name={"File"} metadata={fileMetadata} />
               <MetaDataDisplay name={"Problem"} metadata={problemMetadata} />
               <MetaDataDisplay name={"Contest"} metadata={contestMetadata} />
             </div>
           </main>
         </main>
-      </div>
-    </div>
-  );
-}
-
-function MetaDataDisplay({ name, metadata }: { name: string; metadata: { [key: string]: any } }) {
-  if (!metadata) return null;
-
-  // Helper function: format key name
-  function formatKey(key: string) {
-    return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-  }
-
-  // Helper function: format bytes
-  function formatSize(size: number) {
-    if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-    return `${(size / 1024 / 1024).toFixed(2)} MB`;
-  }
-  // Helper function: format date
-  function formatDate(val: any) {
-    const d = typeof val === "string" ? new Date(val) : val;
-    if (d instanceof Date && !isNaN(d.getTime())) {
-      return d
-        .toLocaleString("zh-CN", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        })
-        .replace(/-/g, "/");
-    }
-    return String(val);
-  }
-  return (
-    <div className="my-2 overflow-auto">
-      <h2 className="px-1 py-1 text-sm font-medium text-gray-300">{name}</h2>
-      <div className="rounded border-2 border-gray-400 bg-black/80 p-3 font-mono text-sm text-green-300">
-        {Object.entries(metadata).map(([key, value]) => {
-          const keyDisplay = <span className="text-blue-400">[{formatKey(key)}]</span>;
-          let valueDisplay;
-          if (key === "size" && typeof value === "number") {
-            valueDisplay = <span className="text-yellow-400">{formatSize(value)}</span>;
-          } else if (key.includes("time_limit") && typeof value === "number") {
-            // unit: seconds
-            valueDisplay = <span className="text-yellow-400">{value} s</span>;
-          } else if (key.includes("memory_limit") && typeof value === "number") {
-            // unit: kilobytes
-            valueDisplay = <span className="text-yellow-400">{value} MB</span>;
-          } else if (key.includes("time") && value) {
-            valueDisplay = <span className="text-pink-400">{formatDate(value)}</span>;
-          } else if (key.includes("link") && typeof value === "string") {
-            valueDisplay = (
-              <a
-                href={value}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-400 underline hover:text-indigo-200"
-              >
-                {value}
-              </a>
-            );
-          } else if (typeof value === "number") {
-            valueDisplay = <span className="text-yellow-300">{value}</span>;
-          } else if (typeof value === "boolean") {
-            valueDisplay = <span className="text-cyan-400">{value ? "true" : "false"}</span>;
-          } else if (typeof value === "object" && value !== null) {
-            valueDisplay = <span className="text-gray-400">{JSON.stringify(value)}</span>;
-          } else {
-            valueDisplay = <span className="text-green-200">{String(value)}</span>;
-          }
-          return (
-            <div
-              key={key}
-              className="mb-1 break-all"
-              style={{ textIndent: "-1.2em", paddingLeft: "1.2em" }}
-            >
-              {keyDisplay} {valueDisplay}
-            </div>
-          );
-        })}
       </div>
     </div>
   );

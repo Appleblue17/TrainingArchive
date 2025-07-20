@@ -11,7 +11,7 @@ export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
 
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [scale, setScale] = useState(1.0);
+  const [scale, setScale] = useState(0.8);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(600);
   const [inputPage, setInputPage] = useState(pageNumber);

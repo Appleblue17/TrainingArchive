@@ -32,6 +32,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Copy contests to public
+        run: |
+          mkdir -p public/contests
+          cp -r contests/* public/contests/
+
       - name: Build
         run: pnpm build
 

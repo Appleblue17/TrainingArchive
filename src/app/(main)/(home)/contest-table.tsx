@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { FiAlertCircle, FiCheck, FiChevronRight, FiFileText } from "react-icons/fi";
 import { ProblemInfoType, ContestInfoType, FileMetadataType } from "../../../lib/types";
 
-import MetaDataDisplay, { formatSize, formatDate } from "@/components/metadata-display";
+import MetaDataDisplay, { formatDate } from "@/components/metadata-display";
 
 export default function ContestTable({ contests }: { contests: ContestInfoType[] }) {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);

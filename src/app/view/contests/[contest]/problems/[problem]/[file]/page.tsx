@@ -32,7 +32,6 @@ async function getFileMetadata(filePath: string, metadataPath: string) {
 
   const metadata: { [key: string]: any } = {
     name: path.basename(filePath),
-    create_time: stats.ctime,
     modified_time: stats.mtime,
   };
   if (stats.isFile()) {

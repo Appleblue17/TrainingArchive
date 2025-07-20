@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import ContestTable from "./contest-table";
 
-import { ProblemInfoType, ContestInfoType } from "../../../lib/types";
+import { ProblemInfoType, ContestInfoType } from "@/lib/types";
 import getFileMetadata from "@/utils/get-file-metadata";
 import { allowedExtensions } from "@/lib/global";
 

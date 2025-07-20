@@ -15,73 +15,24 @@ export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(600);
   const [inputPage, setInputPage] = useState(pageNumber);
-  const [pendingScroll, setPendingScroll] = useState<number | null>(null);
 
-  // Set the initial container width
-  useEffect(() => {
-    if (containerRef.current) {
-      setContainerWidth(containerRef.current.offsetWidth - 36); // Subtracting padding
-    }
-  }, []);
-
-  // Record the references to each page
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    setInputPage(pageNumber); // 当 pageNumber 变化时同步 inputPage
+  }, [pageNumber]);
+
   useEffect(() => {
     if (pageRefs.current[pageNumber - 1]) {
-      pageRefs.current[pageNumber - 1]?.scrollIntoView({ block: "start" });
+      pageRefs.current[pageNumber - 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [pageNumber]);
 
-  // Update the page number based on scroll position
-  const updatePageNum = () => {
-    const container = containerRef.current;
-    if (!container) return;
-    const scrollTop = container.scrollTop;
-    let closestPage = 1;
-    let minDiff = Infinity;
-    pageRefs.current.forEach((el, idx) => {
-      if (el) {
-        // Calculate the difference between the top of the element and the scroll position
-        const diff = Math.abs(el.offsetTop - scrollTop);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestPage = idx + 1;
-        }
-      }
-    });
-    setInputPage(closestPage);
-  };
-
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.addEventListener("scroll", updatePageNum);
-    return () => container.removeEventListener("scroll", updatePageNum);
-  }, [numPages, scale, containerWidth]);
-
-  const handleScaleChange = (newScale: number) => {
-    if (containerRef.current && pageRefs.current[inputPage - 1]) {
-      const container = containerRef.current;
-      const pageEl = pageRefs.current[inputPage - 1] || document.createElement("div");
-      // Record the current page's position in the viewport
-      const offset = pageEl.offsetTop - container.scrollTop;
-      setScale(newScale);
-      setPendingScroll(offset);
-    } else {
-      setScale(newScale);
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth - 32); // Subtracting padding
     }
-  };
-
-  useEffect(() => {
-    if (pendingScroll !== null && containerRef.current && pageRefs.current[inputPage - 1]) {
-      const container = containerRef.current;
-      const pageEl = pageRefs.current[inputPage - 1] || document.createElement("div");
-      // Resume the current page's position in the viewport
-      container.scrollTop = pageEl.offsetTop - pendingScroll;
-      setPendingScroll(null);
-    }
-  }, [scale]);
+  }, []);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
@@ -93,13 +44,13 @@ export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
       <div className="flex shrink-0 items-center justify-center py-1">
         <div className="flex items-center gap-1 px-2">
           <button
-            onClick={() => handleScaleChange(Math.max(0.5, scale - 0.1))}
+            onClick={() => setScale((s) => Math.max(0.5, s - 0.1))}
             className="rounded px-2 py-2 text-white hover:bg-zinc-700"
           >
             <FiMinus className="size-4" />
           </button>
           <button
-            onClick={() => handleScaleChange(Math.min(1, scale + 0.1))}
+            onClick={() => setScale((s) => Math.min(1, s + 0.1))}
             className="rounded px-2 py-2 text-white hover:bg-zinc-700"
           >
             <FiPlus className="size-4" />
@@ -107,43 +58,45 @@ export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
         </div>
         <div className="flex items-center gap-1 border-l border-gray-600 px-2">
           <input
-            type="text"
+            type="number"
             value={inputPage}
             min={1}
             max={numPages || 1}
             onChange={(e) => setInputPage(Number(e.target.value))}
             onBlur={() => {
-              updatePageNum();
+              if (inputPage >= 1 && inputPage <= (numPages || 1) && inputPage !== pageNumber) {
+                setPageNumber(inputPage);
+              } else {
+                setInputPage(pageNumber); // 恢复为当前页
+              }
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 if (inputPage >= 1 && inputPage <= (numPages || 1) && inputPage !== pageNumber) {
                   setPageNumber(inputPage);
+                } else {
+                  setInputPage(pageNumber);
                 }
               }
             }}
-            className="mx-2 w-10 rounded bg-gray-700 py-1 text-center font-sans text-white"
+            className="w-16 rounded bg-gray-700 px-2 py-1 text-white"
           />
-          <span className="text-sm text-gray-200">of {numPages}</span>
+          <span className="text-gray-200">of {numPages}</span>
         </div>
       </div>
 
       {/* PDF Content  */}
       <div
         ref={containerRef}
-        className="scrollbar-thin flex flex-1 items-start justify-center overflow-auto px-4"
+        className="no-scrollbar flex flex-1 items-start justify-center overflow-auto px-4"
       >
         <Document file={pdfPath} onLoadSuccess={onDocumentLoadSuccess}>
           {Array.from({ length: numPages || 0 }, (_, i) => (
             <div
               key={i + 1}
-              ref={(el) => {
-                pageRefs.current[i] = el;
-              }}
               style={{
-                marginBottom: i === (numPages || 1) - 1 ? 0 : `${containerWidth * scale * 0.02}px`,
+                marginBottom: i === numPages! - 1 ? 0 : `${containerWidth * scale * 0.02}px`,
               }}
-              className="flex justify-center"
             >
               <Page
                 pageNumber={i + 1}
@@ -153,6 +106,26 @@ export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
           ))}
         </Document>
       </div>
+      {/* Footer: 页码和翻页按钮 */}
+      {/* <div className="mt-2 flex shrink-0 gap-2 px-4 pb-4">
+        <button
+          onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
+          disabled={pageNumber <= 1}
+          className="rounded bg-gray-700 px-2 py-1 text-white"
+        >
+          Prev
+        </button>
+        <span className="text-gray-200">
+          Page {pageNumber} of {numPages}
+        </span>
+        <button
+          onClick={() => setPageNumber((p) => Math.min(numPages || 1, p + 1))}
+          disabled={numPages ? pageNumber >= numPages : true}
+          className="rounded bg-gray-700 px-2 py-1 text-white"
+        >
+          Next
+        </button>
+      </div> */}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { PREFIX_URL } from "@/lib/global";
+import path from "path";
 import { useRef, useEffect, useState } from "react";
 import { FiMinus, FiPlus } from "react-icons/fi";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -6,7 +8,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 
 export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
   useEffect(() => {
-    pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+    pdfjs.GlobalWorkerOptions.workerSrc = path.join(PREFIX_URL, "pdf.worker.min.mjs");
   }, []);
 
   const [numPages, setNumPages] = useState<number>();

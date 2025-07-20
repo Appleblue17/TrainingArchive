@@ -1,4 +1,5 @@
-export const BASE_URL = "https://appleblue17.github.io/Training-Archive/";
+export const WEB_URL = "https://appleblue17.github.io/Training-Archive/";
+export const BASE_URL = "Training-Archive";
 
 export const allowedExtensions = [
   ".pdf",

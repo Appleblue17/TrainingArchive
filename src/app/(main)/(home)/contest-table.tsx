@@ -5,7 +5,6 @@ import clsx from "clsx";
 
 import { FiAlertCircle, FiCheck, FiChevronRight, FiFileText } from "react-icons/fi";
 import { ProblemInfoType, ContestInfoType, FileMetadataType } from "../../../lib/types";
-import { BASE_URL } from "@/lib/global";
 
 import MetaDataDisplay, { formatDate } from "@/components/metadata-display";
 
@@ -152,7 +151,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                           {contest.files.map((file, idx) => (
                             <div key={idx} className="flex items-center justify-between">
                               <a
-                                href={path.join(BASE_URL, "/view", contest.rel_path, file.name!)}
+                                href={path.join("/view", contest.rel_path, file.name!)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-gray-100 transition-colors hover:text-blue-300"
@@ -202,12 +201,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                     className="flex items-center justify-between"
                                   >
                                     <a
-                                      href={path.join(
-                                        BASE_URL,
-                                        "/view",
-                                        problem.rel_path,
-                                        file.name!,
-                                      )}
+                                      href={path.join("/view", problem.rel_path, file.name!)}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="p-2 text-gray-100 transition-colors hover:text-blue-300"
@@ -241,12 +235,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                         <span className="ml-1 text-gray-400">B</span>
                                       </span>
                                       <a
-                                        href={path.join(
-                                          BASE_URL,
-                                          "/view",
-                                          problem.rel_path,
-                                          codeFile.name!,
-                                        )}
+                                        href={path.join("/view", problem.rel_path, codeFile.name!)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-gray-100 transition-colors hover:text-blue-300"

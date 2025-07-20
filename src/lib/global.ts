@@ -1,4 +1,5 @@
 export const BASE_URL = "https://appleblue17.github.io/Training-Archive/";
+export const PREFIX_URL = "/Training-Archive";
 
 export const allowedExtensions = [
   ".pdf",

@@ -5,6 +5,7 @@ import { FiDownload, FiFileText } from "react-icons/fi";
 
 import getFileMetadata from "@/utils/get-file-metadata";
 import MetaDataDisplay from "@/components/metadata-display";
+import { PREFIX_URL } from "@/lib/global";
 
 export async function generateStaticParams() {
   const contestsDir = path.join(process.cwd(), "contests");
@@ -32,7 +33,7 @@ export default async function FilePage(props: {
   const contest = decodeURIComponent(params.contest);
   const file = decodeURIComponent(params.file);
 
-  const rawFilePath = path.join("/contests", contest, file);
+  const rawFilePath = path.join(PREFIX_URL, "contests", contest, file);
 
   const contestMetadata = getFileMetadata(
     path.join(process.cwd(), "contests", contest),

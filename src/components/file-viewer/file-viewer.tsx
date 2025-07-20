@@ -4,7 +4,7 @@ import FileViewerPDFWrapper from "./file-viewer-pdf-wrapper";
 import FileViewerSource from "./file-viewer-source";
 import FileViewerMarkdownWrapper from "./file-viewer-markdown-wrapper";
 
-import { allowedExtensions, BASE_URL } from "@/lib/global";
+import { allowedExtensions, BASE_URL, PREFIX_URL } from "@/lib/global";
 import { FiDownload, FiFileText } from "react-icons/fi";
 
 export default function FileViewer({ dirPath, fileName }: { dirPath: string; fileName: string }) {
@@ -15,7 +15,7 @@ export default function FileViewer({ dirPath, fileName }: { dirPath: string; fil
     if (allowedExtensions.includes(ext)) {
       if (ext === ".pdf") {
         // For PDF files, use the PDF viewer component
-        const pdfPath = path.join(dirPath, fileName);
+        const pdfPath = path.join(PREFIX_URL, dirPath, fileName);
         return <FileViewerPDFWrapper pdfPath={pdfPath} />;
       }
       if (ext === ".md") {
@@ -33,7 +33,7 @@ export default function FileViewer({ dirPath, fileName }: { dirPath: string; fil
       }
     } else {
       // If the file is not a text file, show a message and allow download
-      const downloadPath = path.join(dirPath, fileName);
+      const downloadPath = path.join(PREFIX_URL, dirPath, fileName);
       return (
         <div className="relative flex h-[85dvh] w-full min-w-0 max-w-full items-center justify-center rounded border-2 border-gray-600 bg-zinc-800">
           <div className="flex flex-col items-center">

@@ -1,6 +1,6 @@
 export type FileMetadataType = {
-  name: string;
-  modified_time: Date;
+  name?: string;
+  modified_time?: Date;
   size?: number; // Size in bytes, optional for directories
   [key: string]: any; // Allow additional properties
 };

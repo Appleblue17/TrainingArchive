@@ -5,7 +5,7 @@ import { FileMetadataType } from "@/lib/types";
 export default function getFileMetadata(filePath: string, metadataPath: string): FileMetadataType {
   const stats = fs.statSync(filePath);
 
-  const metadata: { [key: string]: any } = {
+  const metadata: FileMetadataType = {
     name: path.basename(filePath),
     modified_time: stats.mtime,
   };

@@ -14,7 +14,7 @@ export function formatSize(size: number) {
 }
 
 // Helper function: format date
-export function formatDate(val: any) {
+export function formatDate(val: unknown) {
   const d = typeof val === "string" ? new Date(val) : val;
   if (d instanceof Date && !isNaN(d.getTime())) {
     return d

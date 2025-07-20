@@ -81,7 +81,7 @@ export default function FileViewerPDF({ pdfPath }: { pdfPath: string }) {
       container.scrollTop = pageEl.offsetTop - pendingScroll;
       setPendingScroll(null);
     }
-  }, [scale]);
+  }, [scale, inputPage, pendingScroll]);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);

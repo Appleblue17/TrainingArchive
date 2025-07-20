@@ -1,8 +1,8 @@
 {
-  "name": "AGI",
-  "time_limit": 2,
+  "name": "Collatz Sum",
+  "time_limit": 0.5,
   "memory_limit": 1024,
-  "link": "https://contest.ucup.ac/contest/2135/problem/12150",
+  "link": "https://contest.ucup.ac/contest/2135/problem/12151",
   "solved": true,
-  "solved_in_contest": false
+  "solved_in_contest": true
 }

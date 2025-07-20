@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import path from "path";
 import clsx from "clsx";
 
-import { FiAlertCircle, FiCheck, FiCheckCircle, FiChevronRight, FiFileText } from "react-icons/fi";
+import { FiAlertCircle, FiCheck, FiChevronRight, FiFileText } from "react-icons/fi";
 import { ProblemInfoType, ContestInfoType, FileMetadataType } from "../../../lib/types";
 
 import MetaDataDisplay, { formatSize, formatDate } from "@/components/metadata-display";
@@ -151,7 +151,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                           {contest.files.map((file, idx) => (
                             <div key={idx} className="flex items-center justify-between">
                               <a
-                                href={path.join("/view", contest.rel_path, file.name)}
+                                href={path.join("/view", contest.rel_path, file.name!)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-gray-100 transition-colors hover:text-blue-300"
@@ -177,9 +177,9 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                 {!problem.solved ? (
                                   <FiChevronRight className="inline-block size-4 text-gray-200" />
                                 ) : problem.solved_in_contest ? (
-                                  <FiCheckCircle className="inline-block size-4 text-green-400" />
+                                  <FiCheck className="inline-block size-4 text-green-400" />
                                 ) : (
-                                  <FiCheck className="inline-block size-4 text-emerald-400" />
+                                  <FiCheck className="inline-block size-4 text-emerald-400/60" />
                                 )}
 
                                 <a
@@ -201,7 +201,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                     className="flex items-center justify-between"
                                   >
                                     <a
-                                      href={path.join("/view", problem.rel_path, file.name)}
+                                      href={path.join("/view", problem.rel_path, file.name!)}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="p-2 text-gray-100 transition-colors hover:text-blue-300"
@@ -217,7 +217,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                 (() => {
                                   // Find if "code.*" file exists
                                   const codeFile = problem.files.find((f) =>
-                                    f.name.startsWith("code"),
+                                    f.name!.startsWith("code"),
                                   );
                                   return codeFile ? (
                                     <div className="flex items-center justify-start gap-4">
@@ -235,7 +235,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                         <span className="ml-1 text-gray-400">B</span>
                                       </span>
                                       <a
-                                        href={path.join("/view", problem.rel_path, codeFile.name)}
+                                        href={path.join("/view", problem.rel_path, codeFile.name!)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-gray-100 transition-colors hover:text-blue-300"

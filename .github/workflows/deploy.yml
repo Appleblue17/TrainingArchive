@@ -16,26 +16,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Check pnpm version
+        run: pnpm --version
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "pnpm"
-
-      - name: Install pnpm
-        run: npm install -g pnpm && pnpm --version
-
-      - name: Add npm global bin to PATH
-        run: echo "$(npm bin -g)" >> $GITHUB_PATH
-
-      - name: Debug PATH and which pnpm
-        run: |
-          echo $PATH
-          which pnpm
-          ls -l $(npm bin -g)
-
-      - name: Check pnpm version
-        run: pnpm --version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

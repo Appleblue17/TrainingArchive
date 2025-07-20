@@ -4,7 +4,7 @@ import FileViewerPDFWrapper from "./file-viewer-pdf-wrapper";
 import FileViewerSource from "./file-viewer-source";
 import FileViewerMarkdownWrapper from "./file-viewer-markdown-wrapper";
 
-import { BASE_URL, allowedExtensions } from "@/lib/global";
+import { BASE_URL, WEB_URL, allowedExtensions } from "@/lib/global";
 import { FiDownload, FiFileText } from "react-icons/fi";
 
 export default function FileViewer({ dirPath, fileName }: { dirPath: string; fileName: string }) {
@@ -20,7 +20,7 @@ export default function FileViewer({ dirPath, fileName }: { dirPath: string; fil
       }
       if (ext === ".md") {
         // For Markdown files, use remark to convert to HTML
-        const dirPathURL = path.join(BASE_URL, dirPath);
+        const dirPathURL = path.join(WEB_URL, dirPath);
         return (
           <FileViewerMarkdownWrapper
             dirPath={dirPathURL}

@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 import FileViewer from "@/components/file-viewer/file-viewer";
 import { FiDownload, FiFileText } from "react-icons/fi";
+
+import { BASE_URL } from "@/lib/global";
 import getFileMetadata from "@/utils/get-file-metadata";
 import MetaDataDisplay from "@/components/metadata-display";
 
@@ -31,7 +33,7 @@ export default async function FilePage(props: {
   const contest = decodeURIComponent(params.contest);
   const file = decodeURIComponent(params.file);
 
-  const rawFilePath = "/" + path.join("contests", contest, file);
+  const rawFilePath = path.join(BASE_URL, "contests", contest, file);
 
   const contestMetadata = getFileMetadata(
     path.join(process.cwd(), "contests", contest),

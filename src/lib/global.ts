@@ -1,5 +1,5 @@
-export const BASE_URL = "https://appleblue17.github.io/Training-Archive/";
-export const PREFIX_URL = "/Training-Archive";
+export const BASE_URL = "http://localhost:3000/";
+export const PREFIX_URL = "/";
 
 export const allowedExtensions = [
   ".pdf",

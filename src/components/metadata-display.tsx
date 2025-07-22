@@ -63,8 +63,11 @@ export default function MetaDataDisplay({
             valueDisplay = <span className="text-yellow-400">{value} MB</span>;
           } else if (key.includes("time")) {
             valueDisplay = <span className="text-pink-400">{formatDate(value)}</span>;
-          } else if (key.includes("date") || key.includes("duration")) {
-            valueDisplay = <span className="text-pink-400">{formatDate(value)}</span>;
+          } else if (
+            (key.includes("date") || key.includes("duration")) &&
+            typeof value === "string"
+          ) {
+            valueDisplay = <span className="text-pink-400">{value}</span>;
           } else if (key.includes("link") && typeof value === "string") {
             valueDisplay = (
               <a

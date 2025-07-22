@@ -1,7 +1,8 @@
 {
-  "title": "The 3rd Universal Cup. Stage 40: Potyczki",
+  "name": "The 3rd Universal Cup. Stage 40: Potyczki",
   "date": "2025-06-21",
-  "duration": "13:00:00 - 18:00:00",
+  "start_time": "2025-06-21 13:00:00",
+  "end_time": "2025-06-21 18:00:00",
   "platform": "ucup",
   "link": "https://contest.ucup.ac/contest/2135"
 }

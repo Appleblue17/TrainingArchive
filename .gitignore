@@ -42,3 +42,11 @@ next-env.d.ts
 
 # contest source
 /public/contests
+
+# python
+.venv
+__pycache__/
+
+# crawler
+crawler/credentials.json
+*log.json

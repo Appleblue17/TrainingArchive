@@ -49,8 +49,7 @@ function getContests(): ContestInfoType[] {
     const contestInfo: ContestInfoType = {
       rel_path: path.join("contests", contest),
       date: "??-??-????",
-      title: "???",
-      duration: "??:??:?? - ??:??:??",
+      name: "???",
       platform: "unknown",
       problems: [],
       files: getFilesInfo(contestPath),
@@ -81,5 +80,6 @@ function getContests(): ContestInfoType[] {
 
 export default function HomePage() {
   const contests = getContests();
+
   return <ContestTable contests={contests} />;
 }

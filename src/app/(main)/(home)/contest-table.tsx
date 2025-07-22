@@ -3,11 +3,25 @@ import React, { useEffect, useState } from "react";
 import path from "path";
 import clsx from "clsx";
 
-import { FiAlertCircle, FiCheck, FiChevronRight, FiFileText } from "react-icons/fi";
-import { ProblemInfoType, ContestInfoType, FileMetadataType } from "../../../lib/types";
+import { FiAlertCircle, FiCheck, FiChevronRight, FiFileText, FiX } from "react-icons/fi";
+import {
+  ProblemInfoType,
+  ContestInfoType,
+  FileMetadataType,
+  CodeFileType,
+} from "../../../lib/types";
 
 import MetaDataDisplay, { formatDate } from "@/components/metadata-display";
 import { PREFIX_URL } from "@/lib/global";
+
+function convertDurationToHHMMSS(duration: number): string {
+  const hours = Math.floor(duration / 3600);
+  const minutes = Math.floor((duration % 3600) / 60);
+  const seconds = duration % 60;
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(2, "0")}`;
+}
 
 export default function ContestTable({ contests }: { contests: ContestInfoType[] }) {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
@@ -85,7 +99,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                   onClick={(e) => e.stopPropagation()}
                   className="text-gray-100 transition-colors hover:text-blue-300"
                 >
-                  {contest.title}
+                  {contest.name}
                 </a>
               </td>
 
@@ -171,7 +185,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                               key={idx}
                               onMouseEnter={() => setSelectedProblemIdx(idx)}
                               onMouseLeave={() => setSelectedProblemIdx(null)}
-                              className="flex items-center justify-between px-6 hover:bg-gray-700/40"
+                              className="flex items-center justify-between pl-6 hover:bg-gray-700/40"
                             >
                               {/* Problem name and files */}
                               <div className="flex items-center justify-start">
@@ -219,45 +233,82 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                 ))}
                               </div>
                               {/* Submitted file status */}
-                              {problem.solved &&
-                                (() => {
-                                  // Find if "code.*" file exists
-                                  const codeFile = problem.files.find((f) =>
-                                    f.name!.startsWith("code"),
-                                  );
-                                  return codeFile ? (
-                                    <div className="flex items-center justify-start gap-4">
-                                      <span>
-                                        {codeFile.modified_time
-                                          ? formatDate(codeFile.modified_time)
-                                          : "????/??/?? ??:??:??"}
+                              {(() => {
+                                // Find if "code.*" file exists
+                                const codeFile: CodeFileType | undefined = problem.files.find((f) =>
+                                  f.name!.startsWith("code"),
+                                ) as CodeFileType | undefined;
+                                if (!codeFile) return <></>;
+
+                                let displayTime = "",
+                                  isInContest = false;
+                                const submitTime = codeFile.submit_time || codeFile.modified_time;
+                                const contestEndTime = contest.end_time;
+
+                                // if submitTime <= contest.end_time, show (contest.end_time - submitTime) in hh:mm:ss format
+                                if (submitTime && contestEndTime) {
+                                  const submitDate = new Date(submitTime);
+                                  const endDate = new Date(contestEndTime);
+
+                                  const timeDiff = endDate.getTime() - submitDate.getTime();
+                                  if (timeDiff > 0) {
+                                    isInContest = true;
+                                    displayTime = convertDurationToHHMMSS(timeDiff / 1000);
+                                  } else displayTime = formatDate(submitTime);
+                                } else if (submitTime) {
+                                  displayTime = formatDate(submitTime);
+                                }
+
+                                const submitStatus: string = codeFile.status || "UKN";
+
+                                return (
+                                  <div className="flex items-center justify-start gap-4 font-mono text-base">
+                                    <span
+                                      className={clsx({
+                                        "text-gray-300": !isInContest,
+                                        "text-yellow-100/80": isInContest,
+                                      })}
+                                    >
+                                      {displayTime}
+                                    </span>
+                                    <span>
+                                      <span className="inline-block min-w-10 text-right align-middle">
+                                        {codeFile.size}
                                       </span>
-                                      <span>
-                                        <span className="inline-block min-w-8 text-right align-middle">
-                                          {typeof codeFile.size === "number"
-                                            ? codeFile.size
-                                            : "???"}
-                                        </span>
-                                        <span className="ml-1 text-gray-400">B</span>
+                                      <span className="ml-1 text-gray-400">B</span>
+                                    </span>
+                                    <a
+                                      href={path.join(
+                                        PREFIX_URL,
+                                        "view",
+                                        problem.rel_path,
+                                        codeFile.name!,
+                                      )}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="ml-2 text-gray-100 transition-colors hover:text-blue-300"
+                                    >
+                                      <FiFileText className="inline-block size-5" />
+                                    </a>
+                                    <div className="flex justify-end">
+                                      {submitStatus === "AC" ? (
+                                        <FiCheck className="inline-block size-5 text-green-400" />
+                                      ) : (
+                                        <FiX
+                                          className={clsx("inline-block size-5 text-gray-400/80", {
+                                            "text-red-400/80": submitStatus === "WA",
+                                            "text-purple-400/80": submitStatus === "RE",
+                                            "text-yellow-400/80": submitStatus === "TLE",
+                                          })}
+                                        />
+                                      )}
+                                      <span className="ml-1 inline-block min-w-8 text-gray-400">
+                                        {codeFile.status}
                                       </span>
-                                      <a
-                                        href={path.join(
-                                          PREFIX_URL,
-                                          "view",
-                                          problem.rel_path,
-                                          codeFile.name!,
-                                        )}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-gray-100 transition-colors hover:text-blue-300"
-                                      >
-                                        <FiFileText className="inline-block size-4" />
-                                      </a>
                                     </div>
-                                  ) : (
-                                    <FiAlertCircle className="inline-block size-4 text-yellow-300/80" />
-                                  );
-                                })()}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           ))}
                           {contest.problems.length === 0 && (

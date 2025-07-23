@@ -49,4 +49,5 @@ __pycache__/
 
 # crawler
 crawler/credentials.json
-*log.json
+crawler/chrome-linux
+crawler/chromedriver_linux64

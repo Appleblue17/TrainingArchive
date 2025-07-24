@@ -952,5 +952,23 @@
     "level": "info",
     "platform": "qoj",
     "msg": "Work completed successfully."
+  },
+  {
+    "time": "2025-07-25T01:51:11.964923",
+    "level": "info",
+    "platform": "qoj",
+    "msg": "Login successful with cookies."
+  },
+  {
+    "time": "2025-07-25T01:52:45.683100",
+    "level": "info",
+    "platform": "qoj",
+    "msg": "Login successful with cookies."
+  },
+  {
+    "time": "2025-07-25T01:53:11.847465",
+    "level": "info",
+    "platform": "qoj",
+    "msg": "Work completed successfully."
   }
 ]

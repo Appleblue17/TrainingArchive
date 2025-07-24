@@ -10,29 +10,21 @@ import undetected_chromedriver as uc
 
 
 class BaseCrawler:
-    def __init__(
-        self,
-        platform_name,
-        local_log_path,
-        repo_dir="contests",
-        global_log_path="crawler/global.log.json",
-        config_path="crawler/config.json",
-        credentials_path="crawler/credentials.json",
-        download_dir="crawler/downloads",
-    ):
+    def __init__(self, platform_name, local_log_path):
         self.platform_name = platform_name
-        self.repo_dir = repo_dir
-        self.download_dir = download_dir
+        self.repo_dir = "contests"
+        self.download_dir = "crawler/downloads"
         self.local_log_path = local_log_path
-        self.global_log_path = global_log_path
-        self.config_path = config_path
-        self.credentials_path = credentials_path
+        self.global_log_path = "crawler/global.log.json"
+        self.config_path = "crawler/config.json"
+        self.credentials_path = "crawler/credentials.json"
+        self.last_update_path = "crawler/last-update.json"
         self.driver = None
         self.credentials = self._load_file(self.credentials_path)
 
         # Load configuration
-        config = self._load_file(self.config_path)
-        for key, value in config.get("qoj", {}).items():
+        config = self._load_file(self.config_path, default={})
+        for key, value in config.get(platform_name, {}).items():
             setattr(self, key, value)
 
         # If download directory does not exist, create it
@@ -46,30 +38,47 @@ class BaseCrawler:
         sleep_time = random.uniform(self.min_wait_time, self.max_wait_time)
         time.sleep(sleep_time)
 
-    def _load_file(self, path, create_if_missing=True):
+    def get_extension_name(self, language):
+        language = language.lower()
+        if "c++" in language or "cpp" in language:
+            return "cpp"
+        if "go" in language:
+            return "go"
+        if "java" in language:
+            return "java"
+        if "kotlin" in language:
+            return "kt"
+        if "pascal" in language:
+            return "pas"
+        if "python" in language:
+            return "py"
+        if "rust" in language:
+            return "rs"
+        if language.startswith("c"):
+            return "c"
+        if language.startswith("d"):
+            return "d"
+        # fallback
+        return "txt"
+
+    def _load_file(self, path, default=[]):
         if not os.path.exists(path):
-            if create_if_missing:
-                self.log("warning", f"File {path} does not exist, creating a new one.")
-                with open(path, "w") as f:
-                    json.dump([], f)
-            else:
-                self.log("warning", f"File {path} does not exist.")
-                return []
+            self.log("warning", f"File {path} does not exist, creating a new one.")
+            with open(path, "w") as f:
+                json.dump(default, f)
         with open(path, "r") as f:
             try:
                 return json.load(f)
             except Exception:
-                return []
+                return default
 
     def _write_file(self, path, entry):
         # ensure file exists and is a json object
         if not os.path.exists(path):
             with open(path, "w") as f:
                 json.dump({}, f)
-        with open(path, "r+") as f:
-            f.seek(0)
+        with open(path, "w") as f:
             json.dump(entry, f, indent=2)
-            f.truncate()
 
     def _append_file(self, path, entry):
         # ensure file exists and is a json array
@@ -141,11 +150,11 @@ class BaseCrawler:
                 "warning", f"Target folder {target_folder} does not exist, creating it."
             )
             os.makedirs(target_folder)
-        else:
-            # Clean up any existing files in the target folder
-            for file in os.listdir(target_folder):
-                file_path = os.path.join(target_folder, file)
-                os.remove(file_path)
+
+        # Clean up any existing files in the download_dir
+        for file in os.listdir(self.download_dir):
+            file_path = os.path.join(self.download_dir, file)
+            os.remove(file_path)
 
         self.driver.get(url)
         time.sleep(3)  # Wait for the download to begin
@@ -158,7 +167,6 @@ class BaseCrawler:
         if downloaded_path:
             target_path = os.path.join(target_folder, filename)
             shutil.move(downloaded_path, target_path)
-            self.log("info", f"Downloaded {filename} to {target_path}")
             return True
         else:
             self.log("error", f"Timeout waiting for {filename} to download.")

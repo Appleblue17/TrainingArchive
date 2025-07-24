@@ -51,3 +51,4 @@ __pycache__/
 crawler/credentials.json
 crawler/chrome-linux
 crawler/chromedriver_linux64
+contests/

@@ -1,7 +1,8 @@
 {
   "qoj": {
-    "min_wait_time": 1,
-    "max_wait_time": 3,
+    "base_url": "https://qoj.ac",
+    "min_wait_time": 5,
+    "max_wait_time": 15,
     "username": "Zako oni.A unpassed."
   }
 }

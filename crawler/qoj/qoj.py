@@ -343,10 +343,13 @@ class QOJCrawler(BaseCrawler):
             problem_solved = problem_json.get("solved", False)
 
             # Update "submit_time" and code file
-            if not (
-                entry["status"] != "AC" and problem_solved == True
-            ) and datetime.fromisoformat(entry["submit_time"]) > datetime.fromisoformat(
+            is_newer = datetime.fromisoformat(
+                entry["submit_time"]
+            ) > datetime.fromisoformat(
                 problem_json.get("submit_time", "1970-01-01T00:00:00")
+            )
+            if not (entry["status"] != "AC" and problem_solved) and (
+                is_newer or (entry.get("status") == "AC" and not problem_solved)
             ):
                 problem_json["submit_time"] = entry["submit_time"]
 
@@ -428,7 +431,7 @@ class QOJCrawler(BaseCrawler):
 
         finished = False
         for page in range(
-            1, 1000
+            60, 61
         ):  # Assuming there are not more than 1000 pages of submissions
             print("start fetching page:", page)
             submissions_page = self.fetch_page_with_browser(
@@ -478,7 +481,8 @@ class QOJCrawler(BaseCrawler):
                     if status == 100:
                         status = "AC"
                 else:
-                    status = raw_status
+                    # only preserve uppercase letters
+                    status = "".join(c for c in raw_status if c.isupper())
 
                 time = cols[4].text.strip()
                 memory = cols[5].text.strip()
@@ -491,13 +495,13 @@ class QOJCrawler(BaseCrawler):
                     "time", "1970-01-01T00:00:00"
                 )
                 last_update_time = datetime.fromisoformat(last_update_time_str)
-                if submit_time < last_update_time:
-                    self.log(
-                        "info",
-                        f"Reached last update (Submission {submission_id}), stopping.",
-                    )
-                    finished = True
-                    break
+                # if submit_time < last_update_time:
+                #     self.log(
+                #         "info",
+                #         f"Reached last update (Submission {submission_id}), stopping.",
+                #     )
+                #     finished = True
+                #     break
 
                 submission_entry = {
                     "submission_id": submission_id,

@@ -79,7 +79,7 @@ function getContests(): ContestInfoType[] {
 }
 
 export default function HomePage() {
-  const contests = getContests();
+  const contests = getContests().reverse(); // Reverse to show the latest contests first
 
   return <ContestTable contests={contests} />;
 }

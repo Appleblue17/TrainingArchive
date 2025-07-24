@@ -1,72 +1,34 @@
 #include <bits/stdc++.h>
 using namespace std;
-const int N=5e5+5;
-int T, n;
-struct node{
-    int id, l, r;
-    bool operator <(const node &x)const{
-        if(l==x.l) return r>x.r;
-        return l<x.l;
-    }
-}a[N];
-int ans[N];
-int stk[N], top=0;
-vector<int> vec[N];
-int idx=0;
-int p[N];
-bool cmp(int x, int y){
-    return vec[x].size()<vec[y].size();
+#define int long long
+const int mod=1e9+7;
+int n,k,ans;
+
+int S1(int n){
+    n%=mod;
+    return (n+1)%mod;
 }
-void solve(){
-    scanf("%d", &n);
-    for(int i=1; i<=n; ++i) scanf("%d%d", &a[i].l, &a[i].r), a[i].id=i, ans[i]=1, --a[i].r;
-    sort(a+1, a+n+1);
-    top=0;
-    for(int i=1; i<=n; ++i){
-        if(top&&a[stk[top]].r>=a[i].r){
-            ans[a[i].id]=0;
-            top--;
-            continue;
-        }
-        stk[++top]=i;
-    }
-    idx=0;
-    for(int l=1, r=1; l<=top; l=r+1){
-        r=l;
-        while(r+1<=top&&a[stk[r+1]].l<=a[stk[r]].r) ++r;
-        ++idx; vec[idx].clear(); p[idx]=idx;
-        for(int i=l; i<=r; ++i) vec[idx].push_back(stk[i]);
-    }
-    sort(p+1, p+idx+1, cmp);
-    for(int i=2; i<=idx; ++i){
-        while(vec[p[i]].size()&&vec[p[i-1]].size()){
-            ans[a[vec[p[i]].back()].id]=0;
-            ans[a[vec[p[i-1]].back()].id]=0;
-            vec[p[i]].pop_back();
-            vec[p[i-1]].pop_back();
-        }
-    }
-    int l=0, r=vec[p[idx]].size()-1;
-    while(l<r){
-        if(a[vec[p[idx]][l]].r<a[vec[p[idx]][r]].l){
-            ans[a[vec[p[idx]][l]].id]=0;
-            ans[a[vec[p[idx]][r]].id]=0;
-            ++l; --r;
-        }
-        else break;
-    }
-    int c=1;
-    while(l<=r){
-        ans[a[vec[p[idx]][l]].id]=c;
-        ans[a[vec[p[idx]][r]].id]=c;
-        ++l; --r; c^=1;
-    }
-    for(int i=1; i<=n; ++i) putchar("NT"[ans[i]]);
-    putchar('\n');
+int S2(int n){
+    n%=mod;
+    return n*(n+1)/2%mod;
 }
-int main(){
-    scanf("%d", &T);
-    while(T--){
-        solve();
+
+int g(int A,int B,int n,int k){
+    // sum_{x=0}^n f(Ax+B)
+    if(n<0) return 0;
+    if(!k) return (A%mod*S2(n)%mod+B%mod*S1(n)%mod)%mod;
+    int tot=0;
+    if(A%2==0 && B%2==0) tot+=g(A/2,B/2,n,k-1);
+    if(A%2==0 && B%2==1) tot+=g(A*3,B*3+1,n,k-1);
+    if(A%2==1){
+        tot=(tot+g(A*2,B,n/2,k))%mod;
+        tot=(tot+g(A*2,B+A,(n+1)/2-1,k))%mod;
     }
+    return tot;
+}
+
+signed main(){
+    cin>>n>>k;
+    
+    cout<<g(1,0,n,k);
 }

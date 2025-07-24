@@ -15,7 +15,8 @@ export interface ProblemInfoType {
   name?: string;
   link?: string;
   solved?: boolean;
-  solved_in_contest?: boolean;
+  submit_time?: Date;
+  solve_time?: Date;
   files: FileMetadataType[];
   [key: string]: unknown; // Allow additional properties
 }

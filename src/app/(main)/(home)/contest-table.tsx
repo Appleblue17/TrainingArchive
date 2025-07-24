@@ -3,13 +3,8 @@ import React, { useEffect, useState } from "react";
 import path from "path";
 import clsx from "clsx";
 
-import { FiAlertCircle, FiCheck, FiChevronRight, FiFileText, FiX } from "react-icons/fi";
-import {
-  ProblemInfoType,
-  ContestInfoType,
-  FileMetadataType,
-  CodeFileType,
-} from "../../../lib/types";
+import { FiCheck, FiChevronRight, FiFileText, FiX } from "react-icons/fi";
+import { ProblemInfoType, ContestInfoType, FileMetadataType, CodeFileType } from "@/lib/types";
 
 import MetaDataDisplay, { formatDate } from "@/components/metadata-display";
 import { PREFIX_URL } from "@/lib/global";
@@ -21,6 +16,33 @@ function convertDurationToHHMMSS(duration: number): string {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
     .toString()
     .padStart(2, "0")}`;
+}
+
+function isSolvedInContest(
+  submitTime: string | Date | null,
+  contestEndTime: string | Date | null,
+): boolean {
+  if (!submitTime || !contestEndTime) return false;
+
+  const submitDate = new Date(submitTime);
+  const endDate = new Date(contestEndTime);
+
+  return submitDate <= endDate;
+}
+
+function getInContestTime(
+  submitTime: string | Date | null,
+  contestEndTime: string | Date | null,
+): string {
+  // if submitTime <= contest.end_time, show (contest.end_time - submitTime) in hh:mm:ss format
+  if (submitTime && contestEndTime) {
+    const submitDate = new Date(submitTime);
+    const endDate = new Date(contestEndTime);
+
+    const timeDiff = endDate.getTime() - submitDate.getTime();
+    if (timeDiff > 0) return convertDurationToHHMMSS(timeDiff / 1000);
+  }
+  return formatDate(submitTime);
 }
 
 export default function ContestTable({ contests }: { contests: ContestInfoType[] }) {
@@ -105,14 +127,17 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
 
               {problemLetters.map((letter, idx) => {
                 if (idx < contest.problems.length) {
+                  const solvedInContest = isSolvedInContest(
+                    contest.problems[idx].solve_time || null,
+                    contest.end_time || null,
+                  );
+
                   return (
                     <td
                       key={letter}
                       className={clsx("relative border-r border-gray-700 text-center text-base", {
-                        "bg-green-400/40":
-                          contest.problems[idx].solved && contest.problems[idx].solved_in_contest,
-                        "bg-emerald-400/30":
-                          contest.problems[idx].solved && !contest.problems[idx].solved_in_contest,
+                        "bg-green-400/40": contest.problems[idx].solved && solvedInContest,
+                        "bg-emerald-400/30": contest.problems[idx].solved && !solvedInContest,
                       })}
                     >
                       <a
@@ -149,13 +174,13 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
               >
                 <div
                   className={clsx(
-                    "overflow-auto bg-neutral-900 transition-all duration-500 ease-in-out",
+                    "overflow-auto bg-neutral-900 transition-all duration-500 ease-out",
                     {
                       "py-2": expandedRow === idx,
                     },
                   )}
                   style={{
-                    height: expandedRow === idx ? "500px" : "0px",
+                    height: expandedRow === idx ? "540px" : "0px",
                   }}
                 >
                   {expandedRow === idx && (
@@ -189,12 +214,10 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                             >
                               {/* Problem name and files */}
                               <div className="flex items-center justify-start">
-                                {!problem.solved ? (
-                                  <FiChevronRight className="inline-block size-4 text-gray-200" />
-                                ) : problem.solved_in_contest ? (
+                                {problem.solved ? (
                                   <FiCheck className="inline-block size-4 text-green-400" />
                                 ) : (
-                                  <FiCheck className="inline-block size-4 text-emerald-400/60" />
+                                  <FiChevronRight className="inline-block size-4 text-gray-200" />
                                 )}
 
                                 <a
@@ -202,7 +225,7 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="mx-3 text-base text-gray-100 transition-colors hover:text-blue-300"
+                                  className="ml-3 mr-8 text-base text-gray-100 transition-colors hover:text-blue-300"
                                 >
                                   {problemLetters[idx]}. {problem.name || `Problem ${idx + 1}`}
                                 </a>
@@ -240,24 +263,14 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                 ) as CodeFileType | undefined;
                                 if (!codeFile) return <></>;
 
-                                let displayTime = "",
-                                  isInContest = false;
-                                const submitTime = codeFile.submit_time || codeFile.modified_time;
-                                const contestEndTime = contest.end_time;
-
-                                // if submitTime <= contest.end_time, show (contest.end_time - submitTime) in hh:mm:ss format
-                                if (submitTime && contestEndTime) {
-                                  const submitDate = new Date(submitTime);
-                                  const endDate = new Date(contestEndTime);
-
-                                  const timeDiff = endDate.getTime() - submitDate.getTime();
-                                  if (timeDiff > 0) {
-                                    isInContest = true;
-                                    displayTime = convertDurationToHHMMSS(timeDiff / 1000);
-                                  } else displayTime = formatDate(submitTime);
-                                } else if (submitTime) {
-                                  displayTime = formatDate(submitTime);
-                                }
+                                const isInContest = isSolvedInContest(
+                                  codeFile.submit_time || codeFile.modified_time || null,
+                                  contest.end_time || null,
+                                );
+                                const displayTime = getInContestTime(
+                                  codeFile.submit_time || codeFile.modified_time || null,
+                                  contest.end_time || null,
+                                );
 
                                 const submitStatus: string = codeFile.status || "UKN";
 
@@ -298,7 +311,8 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
                                           className={clsx("inline-block size-5 text-gray-400/80", {
                                             "text-red-400/80": submitStatus === "WA",
                                             "text-purple-400/80": submitStatus === "RE",
-                                            "text-yellow-400/80": submitStatus === "TLE",
+                                            "text-yellow-400/80":
+                                              submitStatus === "TLE" || submitStatus === "TL",
                                           })}
                                         />
                                       )}

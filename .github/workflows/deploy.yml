@@ -22,9 +22,6 @@ jobs:
         with:
           version: 10.13.1
 
-      - name: Check pnpm version
-        run: pnpm --version
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -41,6 +38,8 @@ jobs:
 
       - name: Build
         run: pnpm build
+        env:
+          NODE_ENV: production
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4

@@ -382,5 +382,107 @@
     "level": "important",
     "platform": "qoj",
     "msg": "QOJ Crawler finished successfully at 2025-07-26T00:36:43.905420"
+  },
+  {
+    "time": "2025-07-26T01:05:21.940273",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T01:05:21.940259"
+  },
+  {
+    "time": "2025-07-26T01:05:59.053732",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T01:05:59.053717"
+  },
+  {
+    "time": "2025-07-26T01:11:37.511138",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler finished successfully at 2025-07-26T01:11:37.511133"
+  },
+  {
+    "time": "2025-07-26T01:12:06.709766",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T01:12:06.709746"
+  },
+  {
+    "time": "2025-07-26T01:18:27.798074",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler finished successfully at 2025-07-26T01:18:27.798071"
+  },
+  {
+    "time": "2025-07-26T01:19:20.942523",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T01:19:20.942505"
+  },
+  {
+    "time": "2025-07-26T01:21:22.889525",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler finished successfully at 2025-07-26T01:21:22.889519"
+  },
+  {
+    "time": "2025-07-26T01:21:50.862679",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T01:21:50.862666"
+  },
+  {
+    "time": "2025-07-26T01:26:41.680837",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T01:26:41.680823"
+  },
+  {
+    "time": "2025-07-26T01:35:29.654771",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler finished successfully at 2025-07-26T01:35:29.654766"
+  },
+  {
+    "time": "2025-07-26T01:37:27.215947",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T01:37:27.215928"
+  },
+  {
+    "time": "2025-07-26T01:51:19.114045",
+    "level": "error",
+    "platform": "qoj",
+    "msg": "Failed to fetch page https://qoj.ac/submission/826398: HTTPConnectionPool(host='localhost', port=46721): Read timed out. (read timeout=120)"
+  },
+  {
+    "time": "2025-07-26T01:51:19.117709",
+    "level": "fatal",
+    "platform": "qoj",
+    "msg": "An error occurred: 'NoneType' object has no attribute 'find'"
+  },
+  {
+    "time": "2025-07-26T01:52:27.838747",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T01:52:27.838733"
+  },
+  {
+    "time": "2025-07-26T01:57:27.726854",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler finished successfully at 2025-07-26T01:57:27.726849"
+  },
+  {
+    "time": "2025-07-26T01:58:20.525757",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T01:58:20.525744"
+  },
+  {
+    "time": "2025-07-26T02:02:23.855825",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler finished successfully at 2025-07-26T02:02:23.855820"
   }
 ]

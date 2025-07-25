@@ -294,7 +294,7 @@ class BaseCrawler:
                 continue
 
             problems = []
-            for problem_info in problem_list[:2]:
+            for problem_info in problem_list:
                 # Create problem folder
                 problem_letter = problem_info["letter"]
                 problem_path = os.path.join(contest_folder, "problems", problem_letter)
@@ -379,7 +379,6 @@ class BaseCrawler:
             found = False
 
         if found:
-            print("found contest:", contest["name"], "problem:", prob["name"])
             problem_folder = os.path.join(
                 self.repo_dir,
                 f"{contest['date']} {contest['name']}",
@@ -465,12 +464,12 @@ class BaseCrawler:
         submit_time = datetime.fromisoformat(submission_entry["submit_time"])
         submission_id = submission_entry["submission_id"]
 
-        # if submit_time < self.last_update_time:
-        #     self.log(
-        #         "info",
-        #         f"Reached last update (Submission {submission_id}), stopping.",
-        #     )
-        #     return True
+        if submit_time < self.last_update_time:
+            self.log(
+                "info",
+                f"Reached last update (Submission {submission_id}), stopping.",
+            )
+            return True
 
         self._update_submission_status(submission_entry)
         return False

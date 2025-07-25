@@ -276,7 +276,7 @@ class QOJCrawler(BaseCrawler):
             return
 
         # Assuming there are not more than 50 pages of submissions
-        for page in range(11, 12):
+        for page in range(1, 50):
             self.log("info", f"Start fetching submissions from page {page}.")
             submissions_page = self.fetch_page_with_browser(
                 urljoin(self.base_url, f"submissions?submitter={username}&page={page}")

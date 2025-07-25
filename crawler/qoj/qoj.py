@@ -81,18 +81,23 @@ class QOJCrawler(BaseCrawler):
             return
         self.log("fatal", "No valid login method found. Please check your credentials.")
 
-    def fetch_contests(self):
-        # First read local contests file
-        self.contests = self._load_file(self.contests_path)
-
-        # Then fetch contests from the website
+    def fetch_contests_get_contest_list(self):
+        """
+        Fetch the list of contests from the website, and return a list of contest information.
+        Return a dictionary with the following required keys:
+        - name: The name of the contest
+        - date: The date of the contest in ISO format (YYYY-MM-DD)
+        - platform: The platform name (in this case, "QOJ")
+        - start_time: The start time of the contest in ISO format (YYYY-MM-DDTHH:MM:SS)
+        - end_time: The end time of the contest in ISO format (YYYY-MM-DDTHH:MM:SS)
+        - link: The link to the contest
+        """
         contest_page = self.fetch_page_with_browser("https://qoj.ac/contests")
 
         soup = bs4(contest_page, "html.parser")
         contest_elements = soup.find_all("tr", class_="table-success")
 
-        count = 0
-        # Extract four columns
+        contest_infos = []
         for contest in contest_elements:
             cols = contest.find_all("td")
             if len(cols) < 4:
@@ -138,19 +143,6 @@ class QOJCrawler(BaseCrawler):
                     elif char == "☆":
                         difficulty += 0.5
 
-            # Create contest folder
-            contest_folder = os.path.join(self.repo_dir, f"{date} {contest_name}")
-            if os.path.exists(contest_folder):
-                self.log(
-                    "warning",
-                    f"Contest folder already exists: {contest_folder}. Skipped.",
-                )
-                continue
-            else:
-                os.makedirs(contest_folder)
-                self.log("info", f"Created contest folder: {contest_folder}")
-
-            # Write contest entry to contest.json
             contest_info = {
                 "name": contest_name,
                 "date": date.isoformat(),
@@ -161,137 +153,129 @@ class QOJCrawler(BaseCrawler):
             }
             if difficulty is not None:
                 contest_info["difficulty"] = difficulty
-            self._write_file(
-                os.path.join(contest_folder, "contest.json"),
-                contest_info,
-            )
 
-            """
-            Process the contest problems
-            """
-            # Create problems folder
-            problems_folder = os.path.join(contest_folder, "problems")
-            os.makedirs(problems_folder)
+            contest_infos.append(contest_info)
 
-            # Go into the contest page to fetch more details
-            contest_page = self.fetch_page_with_browser(contest_link)
+        return contest_infos
 
-            soup = bs4(contest_page, "html.parser")
+    def fetch_contests_get_problem_list(self, contest_info, contest_folder):
+        """
+        Fetch the list of problems in a contest. You can also perform other operations like downloading the contest attachments.
+        Return a dictionary with the following required keys:
+        - letter: The letter of the problem (e.g., "A", "B", "C", etc.)
+        - name: The name of the problem
+        - link: The link to the problem page
+        """
+        contest_name = contest_info["name"]
+        contest_link = contest_info["link"]
 
-            # Download attachments of the contest
-            attachment_block = soup.find(
-                "div", class_="card border-success top-buffer-lg"
-            )
-            if attachment_block:
-                attachment_elements = attachment_block.find_all("a")
-                for attachment in attachment_elements:
-                    attachment_link = urljoin(contest_link, attachment["href"])
-                    attachment_name = attachment.text.strip()
+        # Go into the contest page to fetch more details
+        contest_page = self.fetch_page_with_browser(contest_link)
 
-                    # Save the attachment to contest_folder
-                    attachment_path = urljoin(contest_folder, attachment_name)
-                    if not self.download_file_with_browser(
-                        attachment_link, attachment_name + ".pdf", contest_folder
-                    ):
-                        # If download failed or the link is not a download link, print it to pdf
-                        self.print_to_pdf_with_browser(
-                            attachment_link, attachment_name + ".pdf", contest_folder
-                        )
+        soup = bs4(contest_page, "html.parser")
 
-            problem_table = soup.find("table", class_="table").find("tbody")
-            if not problem_table:
-                self.log("error", f"No problem table found for contest {contest_name}.")
-                continue
-            problem_elements = problem_table.find_all("tr")
+        # Download attachments of the contest
+        attachment_block = soup.find("div", class_="card border-success top-buffer-lg")
+        if attachment_block:
+            attachment_elements = attachment_block.find_all("a")
+            for attachment in attachment_elements:
+                attachment_link = urljoin(contest_link, attachment["href"])
+                attachment_name = attachment.text.strip()
 
-            problems = []
-            for problem in problem_elements:
-                cols = problem.find_all("td")
-                if len(cols) < 2:
-                    continue
-
-                # Create problem folder
-                problem_letter = cols[0].text.strip()
-                problem_path = os.path.join(contest_folder, "problems", problem_letter)
-                os.makedirs(problem_path, exist_ok=True)
-
-                problem_link = urljoin(self.base_url, cols[1].find("a")["href"])
-                problem_name = cols[1].text.strip()
-
-                problem_page = self.fetch_page_with_browser(problem_link)
-                if not problem_page:
-                    self.log(
-                        "error",
-                        f"Failed to fetch problem page {problem_link}.",
-                    )
-                    continue
-
-                problem_soup = bs4(problem_page, "html.parser")
-
-                badge_elements = problem_soup.find(
-                    "div", class_="uoj-content"
-                ).find_all("span", class_="badge")
-                for badge in badge_elements:
-                    badge_content = badge.text.strip()
-                    if "Time Limit" in badge_content:
-                        time_limit = badge_content.split(":")[1].strip()
-                    if "Memory Limit" in badge_content:
-                        memory_limit = badge_content.split(":")[1].strip()
-
-                problem_pdf = problem_soup.find("iframe", id="statements-pdf")
-                if not problem_pdf:
-                    self.log(
-                        "error",
-                        f"Did not find pdf in {problem_link}.",
-                    )
-                    continue
-
-                problem_pdf_link = urljoin(self.base_url, problem_pdf["src"].strip())
+                # Save the attachment to contest_folder
+                attachment_path = urljoin(contest_folder, attachment_name)
                 if not self.download_file_with_browser(
-                    problem_pdf_link, "statement.pdf", problem_path
+                    attachment_link, attachment_name + ".pdf", contest_folder
                 ):
-                    self.log(
-                        "error",
-                        f"Failed to download pdf from {problem_pdf_link}.",
+                    # If download failed or the link is not a download link, print it to pdf
+                    self.print_to_pdf_with_browser(
+                        attachment_link, attachment_name + ".pdf", contest_folder
                     )
 
-                problem_entry = {
-                    "link": problem_link,
-                    "name": problem_name,
-                }
-                if "time_limit" in locals():
-                    problem_entry["time_limit"] = time_limit
-                if "memory_limit" in locals():
-                    problem_entry["memory_limit"] = memory_limit
-                problem_entry["solved"] = False
+        problem_table = soup.find("table", class_="table").find("tbody")
+        if not problem_table:
+            self.log("error", f"No problem table found for contest {contest_name}.")
+            return None
+        problem_elements = problem_table.find_all("tr")
 
-                problems.append(
-                    {
-                        "letter": problem_letter,
-                        "name": problem_name,
-                        "link": problem_link,
-                        "solved": False,
-                    }
-                )
-                # Write problem.json
-                self._write_file(
-                    os.path.join(problem_path, "problem.json"), problem_entry
-                )
+        problems_infos = []
+        for problem in problem_elements:
+            cols = problem.find_all("td")
+            if len(cols) < 2:
+                continue
 
-            # Create contest entry
-            contest_entry = {
-                "name": contest_name,
-                "date": date.isoformat(),
-                "link": contest_link,
-                "problems": problems,
+            # Create problem folder
+            problem_letter = cols[0].text.strip()
+            problem_path = os.path.join(contest_folder, "problems", problem_letter)
+            os.makedirs(problem_path, exist_ok=True)
+
+            problem_link = urljoin(self.base_url, cols[1].find("a")["href"])
+            problem_name = cols[1].text.strip()
+
+            problem_info = {
+                "letter": problem_letter,
+                "name": problem_name,
+                "link": problem_link,
             }
-            self.contests.append(contest_entry)
+            problems_infos.append(problem_info)
+        return problems_infos
 
-            # Write the contest entry to the local file
-            self._write_file(self.contests_path, self.contests)
+    def fetch_contests_get_problem_details(
+        self, problem_info, contest_folder, problem_path
+    ):
+        """
+        Fetch the details of a problem in a contest. This includes downloading the problem statement PDF and extracting time/memory limits.
+        Return a dictionary based on the problem_info. No additional keys are required.
+        """
+        problem_link = problem_info["link"]
+        problem_name = problem_info["name"]
 
-            count += 1
-            print("finished index:", contest_name, count)
+        problem_page = self.fetch_page_with_browser(problem_link)
+        if not problem_page:
+            self.log(
+                "error",
+                f"Failed to fetch problem page {problem_link}.",
+            )
+            return None
+
+        problem_soup = bs4(problem_page, "html.parser")
+
+        badge_elements = problem_soup.find("div", class_="uoj-content").find_all(
+            "span", class_="badge"
+        )
+        for badge in badge_elements:
+            badge_content = badge.text.strip()
+            if "Time Limit" in badge_content:
+                time_limit = badge_content.split(":")[1].strip()
+            if "Memory Limit" in badge_content:
+                memory_limit = badge_content.split(":")[1].strip()
+
+        problem_pdf = problem_soup.find("iframe", id="statements-pdf")
+        if not problem_pdf:
+            self.log(
+                "error",
+                f"Did not find pdf in {problem_link}.",
+            )
+            return None
+
+        problem_pdf_link = urljoin(self.base_url, problem_pdf["src"].strip())
+        if not self.download_file_with_browser(
+            problem_pdf_link, "statement.pdf", problem_path
+        ):
+            self.log(
+                "error",
+                f"Failed to download pdf from {problem_pdf_link}.",
+            )
+
+        problem_entry = {
+            "link": problem_link,
+            "name": problem_name,
+        }
+        if "time_limit" in locals():
+            problem_entry["time_limit"] = time_limit
+        if "memory_limit" in locals():
+            problem_entry["memory_limit"] = memory_limit
+        return problem_entry
 
     def _update_submission_status(self, entry):
         # Try to find it in self.contests by either problem_name or problem_link
@@ -430,9 +414,8 @@ class QOJCrawler(BaseCrawler):
         self._write_file(self.submissions_path, self.staged_submissions)
 
         finished = False
-        for page in range(
-            60, 61
-        ):  # Assuming there are not more than 1000 pages of submissions
+        # Assuming there are not more than 1000 pages of submissions
+        for page in range(1, 2):
             print("start fetching page:", page)
             submissions_page = self.fetch_page_with_browser(
                 urljoin(self.base_url, f"submissions?submitter={username}&page={page}")
@@ -495,13 +478,13 @@ class QOJCrawler(BaseCrawler):
                     "time", "1970-01-01T00:00:00"
                 )
                 last_update_time = datetime.fromisoformat(last_update_time_str)
-                # if submit_time < last_update_time:
-                #     self.log(
-                #         "info",
-                #         f"Reached last update (Submission {submission_id}), stopping.",
-                #     )
-                #     finished = True
-                #     break
+                if submit_time < last_update_time:
+                    self.log(
+                        "info",
+                        f"Reached last update (Submission {submission_id}), stopping.",
+                    )
+                    finished = True
+                    break
 
                 submission_entry = {
                     "submission_id": submission_id,
@@ -534,8 +517,10 @@ if __name__ == "__main__":
     crawler = QOJCrawler()
     try:
         crawler.login()
-        # crawler.fetch_contests()
+        crawler.fetch_contests()
+        crawler.log("info", "Contests fetched successfully.")
         crawler.fetch_submissions()
+        crawler.log("info", "Submissions fetched successfully.")
         crawler.log("info", "Work completed successfully.")
     except Exception as e:
         crawler.log("fatal", f"An error occurred: {e}")

@@ -5,6 +5,9 @@ import json
 from bs4 import BeautifulSoup as bs4
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
+from dotenv import load_dotenv
+
+load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from crawler.base import BaseCrawler
@@ -23,26 +26,6 @@ class QOJCrawler(BaseCrawler):
         success = self.username in main_page
         return success
 
-    def try_login_with_cookies(self, cookies):
-        if not cookies:
-            self.log("warning", "No cookies provided for login.")
-            return False
-
-        self.driver.get("https://qoj.ac/")
-        self._random_sleep()
-
-        # Add cookies to the driver
-        self.driver.delete_all_cookies()  # Clear existing cookies
-        for name, value in cookies.items():
-            self.driver.add_cookie({"name": name, "value": value, "domain": "qoj.ac"})
-        self.driver.refresh()  # Refresh to apply cookies
-
-        if not self.is_logged_in():
-            self.log("warning", "Login failed with provided cookies.")
-            return False
-        else:
-            return True
-
     def try_login_with_password(self, username, password):
         self.driver.get("https://qoj.ac/login")
         self._random_sleep()
@@ -57,24 +40,11 @@ class QOJCrawler(BaseCrawler):
             self.log("fatal", "Login failed with provided credentials.")
             return False
         else:
-            # Save cookies after successful login
-            cookies = self.driver.get_cookies()
-            cookie_dict = {c["name"]: c["value"] for c in cookies}
-            self.cookies = cookie_dict
-            self.credentials.setdefault("qoj", {})["cookies"] = cookie_dict
-            with open(self.credentials_path, "w") as f:
-                json.dump(self.credentials, f, indent=2)
             return True
 
     def login(self):
-        # Try to login with cookies first
-        self.cookies = self.credentials.get("qoj", {}).get("cookies")
-        if self.try_login_with_cookies(self.cookies):
-            self.log("info", "Login successful with cookies.")
-            return
-        # If cookies login fails, try username/password
-        username = self.credentials.get("qoj", {}).get("username")
-        password = self.credentials.get("qoj", {}).get("password")
+        username = os.getenv("QOJ_USERNAME")
+        password = os.getenv("QOJ_PASSWORD")
         if self.try_login_with_password(username, password):
             self.log("info", "Login successful with username and password.")
             return
@@ -297,15 +267,16 @@ class QOJCrawler(BaseCrawler):
         - submit_time: The time when the submission was made, in ISO format (YYYY-MM-DDTHH:MM:SS)
         """
 
-        username = self.credentials.get(self.platform_name, {}).get("username")
+        username = os.getenv("QOJ_USERNAME")
         if not username:
             self.log(
-                "fatal", "Username not found in credentials. Cannot fetch submissions."
+                "fatal",
+                "Username not found in environment variables. Cannot fetch submissions.",
             )
             return
 
         # Assuming there are not more than 50 pages of submissions
-        for page in range(12, 13):
+        for page in range(11, 12):
             self.log("info", f"Start fetching submissions from page {page}.")
             submissions_page = self.fetch_page_with_browser(
                 urljoin(self.base_url, f"submissions?submitter={username}&page={page}")

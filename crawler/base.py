@@ -17,10 +17,8 @@ class BaseCrawler:
         self.local_log_path = local_log_path
         self.global_log_path = "crawler/global.log.json"
         self.config_path = "crawler/config.json"
-        self.credentials_path = "crawler/credentials.json"
         self.last_update_path = "crawler/last-update.json"
         self.driver = None
-        self.credentials = self._load_file(self.credentials_path)
 
         # Load configuration
         config = self._load_file(self.config_path, default={})
@@ -467,12 +465,12 @@ class BaseCrawler:
         submit_time = datetime.fromisoformat(submission_entry["submit_time"])
         submission_id = submission_entry["submission_id"]
 
-        if submit_time < self.last_update_time:
-            self.log(
-                "info",
-                f"Reached last update (Submission {submission_id}), stopping.",
-            )
-            return True
+        # if submit_time < self.last_update_time:
+        #     self.log(
+        #         "info",
+        #         f"Reached last update (Submission {submission_id}), stopping.",
+        #     )
+        #     return True
 
         self._update_submission_status(submission_entry)
         return False

@@ -1,4 +1,3 @@
-from curses.ascii import isdigit
 import re
 import sys
 import os
@@ -277,146 +276,37 @@ class QOJCrawler(BaseCrawler):
             problem_entry["memory_limit"] = memory_limit
         return problem_entry
 
-    def _update_submission_status(self, entry):
-        # Try to find it in self.contests by either problem_name or problem_link
-        # If found, write it to the contest/problem folder
-        # Otherwise, write it to local staged-submissions.json
-        ext = self.get_extension_name(entry["language"])
-        filename = f"code.{ext}"
+    def fetch_submissions_fetch_source_code(self, entry):
+        """
+        Fetch the source code of a submission. This method is called in `_update_submission_status`.
+        """
 
-        # Check if the problem has been recorded in any contest
-        name_and_link_matched = []
-        name_matched = []
-        for contest in self.contests:
-            for prob in contest.get("problems", []):
-                if prob["name"] == entry["problem_name"] and prob["link"] == entry.get(
-                    "problem_link"
-                ):
-                    name_and_link_matched.append((contest, prob))
-                elif prob["name"] == entry["problem_name"]:
-                    name_matched.append((contest, prob))
+        code_page = self.fetch_page_with_browser(entry["submission_link"])
+        code_soup = bs4(code_page, "html.parser")
+        code = code_soup.find("pre", class_="sh_sourceCode").find("code").get_text()
+        return code
 
-        if name_and_link_matched:
-            found = True
-            contest, prob = name_and_link_matched[0]
-        elif name_matched:
-            found = True
-            contest, prob = name_matched[0]
-        else:
-            found = False
+    def fetch_submissions_get_submissions(self):
+        """
+        Fetch the submissions from the website.
+        After fetching each submission, call the `_register_submission` method to register the submission. If the return value is True, stop fetching submissions and exit immediately.
+        The submission entry should contain the following keys:
+        - submission_id: The ID of the submission
+        - problem_name: The name of the problem
+        - problem_link: The link to the problem page
+        - submit_time: The time when the submission was made, in ISO format (YYYY-MM-DDTHH:MM:SS)
+        """
 
-        if found:
-            print("found contest:", contest["name"], "problem:", prob["name"])
-            problem_folder = os.path.join(
-                self.repo_dir,
-                f"{contest['date']} {contest['name']}",
-                "problems",
-                prob["letter"],
-            )
-            # Get if the problem is solved
-            problem_json_path = os.path.join(problem_folder, "problem.json")
-            if not os.path.exists(problem_json_path):
-                self.log(
-                    "error",
-                    f"Problem JSON not found for {prob['name']} in {problem_folder}.",
-                )
-                return False
-
-            with open(problem_json_path, "r", encoding="utf-8") as f:
-                problem_json = json.load(f)
-            problem_solved = problem_json.get("solved", False)
-
-            # Update "submit_time" and code file
-            is_newer = datetime.fromisoformat(
-                entry["submit_time"]
-            ) > datetime.fromisoformat(
-                problem_json.get("submit_time", "1970-01-01T00:00:00")
-            )
-            if not (entry["status"] != "AC" and problem_solved) and (
-                is_newer or (entry.get("status") == "AC" and not problem_solved)
-            ):
-                problem_json["submit_time"] = entry["submit_time"]
-
-                # Fetch code file
-                code_page = self.fetch_page_with_browser(entry["submission_link"])
-                code_soup = bs4(code_page, "html.parser")
-                code = (
-                    code_soup.find("pre", class_="sh_sourceCode")
-                    .find("code")
-                    .get_text()
-                )
-
-                # Update source code file
-                os.makedirs(problem_folder, exist_ok=True)
-                file_path = os.path.join(problem_folder, filename)
-                with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(code)
-
-                # Update code.{ext}.json
-                self._write_file(
-                    os.path.join(problem_folder, f"code.{ext}.json"),
-                    entry,
-                )
-
-            # Update problem.json "solved" and "solve_time"
-            if entry["status"] == "AC":
-                problem_json["solved"] = True
-
-                # If problem_json["solve_time"] is not set or later than entry["submit_time"], update it
-                if "solve_time" not in problem_json or datetime.fromisoformat(
-                    entry["submit_time"]
-                ) < datetime.fromisoformat(
-                    problem_json.get("solve_time", "1970-01-01T00:00:00")
-                ):
-                    problem_json["solve_time"] = entry["submit_time"]
-
-            self._write_file(problem_json_path, problem_json)
-            return True
-
-        # If not found, update to staged-submissions.json
-        if not found:
-            # Check if the problem already exists in staged submissions
-            for staged_entry in self.staged_submissions:
-                if staged_entry["problem_name"] == entry["problem_name"]:
-                    if (
-                        entry["status"] == "AC"
-                        or not staged_entry.get("status") == "AC"
-                    ):
-                        # Update the existing entry with the new submission
-                        staged_entry.update(entry)
-                    break
-            else:
-                self.staged_submissions.append(entry)
-                self._write_file(self.submissions_path, self.staged_submissions)
-            return False
-
-    def fetch_submissions(self):
-        username = self.credentials.get("qoj", {}).get("username")
+        username = self.credentials.get(self.platform_name, {}).get("username")
         if not username:
             self.log(
                 "fatal", "Username not found in credentials. Cannot fetch submissions."
             )
             return
 
-        # Extract staged submissions
-        self.last_update = self._load_file(self.last_update_path, default={})
-        last_crawled_id = self.last_update.get("qoj", {}).get("id", None)
-
-        self.contests = self._load_file(self.contests_path)
-        self.staged_submissions = self._load_file(self.submissions_path)
-
-        # First try updating existing staged submissions
-        new_staged = []
-        for entry in self.staged_submissions:
-            if not self._update_submission_status(entry):
-                new_staged.append(entry)
-        self.staged_submissions = new_staged
-        self._write_file(self.submissions_path, self.staged_submissions)
-
-        finished = False
-        # Assuming there are not more than 1000 pages of submissions
-        for page in range(1, 2):
-            print("start fetching page:", page)
+        # Assuming there are not more than 50 pages of submissions
+        for page in range(12, 13):
+            self.log("info", f"Start fetching submissions from page {page}.")
             submissions_page = self.fetch_page_with_browser(
                 urljoin(self.base_url, f"submissions?submitter={username}&page={page}")
             )
@@ -474,17 +364,6 @@ class QOJCrawler(BaseCrawler):
                 submit_time = datetime.strptime(
                     cols[8].text.strip(), "%Y-%m-%d %H:%M:%S"
                 )
-                last_update_time_str = self.last_update.get("qoj", {}).get(
-                    "time", "1970-01-01T00:00:00"
-                )
-                last_update_time = datetime.fromisoformat(last_update_time_str)
-                if submit_time < last_update_time:
-                    self.log(
-                        "info",
-                        f"Reached last update (Submission {submission_id}), stopping.",
-                    )
-                    finished = True
-                    break
 
                 submission_entry = {
                     "submission_id": submission_id,
@@ -497,31 +376,29 @@ class QOJCrawler(BaseCrawler):
                     "problem_link": problem_link,
                     "submission_link": submission_link,
                 }
-                self._update_submission_status(submission_entry)
-                last_crawled_id = submission_id
+                stop_fetching = self._register_submission(submission_entry)
+                if stop_fetching:
+                    return
 
-            print(f"finished: {page}")
-            if finished:
-                break
-
-        # Write staged submissions to file
-
-        self.last_update["qoj"] = {
-            "time": datetime.now().isoformat(),
-            "id": last_crawled_id,
-        }
-        self._write_file(self.last_update_path, self.last_update)
+            self.log(
+                "info",
+                f"Fetched {len(submission_elements)} submissions from page {page}.",
+            )
 
 
 if __name__ == "__main__":
     crawler = QOJCrawler()
     try:
+        crawler.log("important", "QOJ Crawler started at " + datetime.now().isoformat())
         crawler.login()
         crawler.fetch_contests()
         crawler.log("info", "Contests fetched successfully.")
         crawler.fetch_submissions()
         crawler.log("info", "Submissions fetched successfully.")
-        crawler.log("info", "Work completed successfully.")
+        crawler.log(
+            "important",
+            "QOJ Crawler finished successfully at " + datetime.now().isoformat(),
+        )
     except Exception as e:
         crawler.log("fatal", f"An error occurred: {e}")
     finally:

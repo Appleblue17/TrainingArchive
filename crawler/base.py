@@ -187,15 +187,6 @@ class BaseCrawler:
         with open(os.path.join(target_folder, filename), "wb") as f:
             f.write(base64.b64decode(pdf["data"]))
 
-    def login(self):
-        raise NotImplementedError
-
-    def fetch_contests(self):
-        raise NotImplementedError
-
-    def fetch_submissions(self, since_time=None):
-        raise NotImplementedError
-
     def log(self, level, msg):
         """
         level: 'info', 'warning', 'important', 'error'
@@ -215,3 +206,139 @@ class BaseCrawler:
             self._append_file(self.global_log_path, log_entry)
         if level == "fatal":
             raise Exception(f"Fatal error in {self.platform_name} crawler: {msg}")
+
+    def login(self):
+        raise NotImplementedError
+
+    def fetch_contests_get_contest_list(self):
+        """
+        Fetch the list of contests from the website, and return a list of contest information.
+        Return a dictionary with the following required keys:
+        - name: The name of the contest
+        - date: The date of the contest in ISO format (YYYY-MM-DD)
+        - platform: The platform name (in this case, "QOJ")
+        - start_time: The start time of the contest in ISO format (YYYY-MM-DDTHH:MM:SS)
+        - end_time: The end time of the contest in ISO format (YYYY-MM-DDTHH:MM:SS)
+        - link: The link to the contest
+        """
+        raise NotImplementedError
+
+    def fetch_contests_get_problem_list(self, contest_info, contest_folder):
+        """
+        Fetch the list of problems in a contest. You can also perform other operations like downloading the contest attachments.
+        Return a dictionary with the following required keys:
+        - letter: The letter of the problem (e.g., "A", "B", "C", etc.)
+        - name: The name of the problem
+        - link: The link to the problem page
+        """
+        raise NotImplementedError
+
+    def fetch_contests_get_problem_details(
+        self, problem_info, contest_folder, problem_path
+    ):
+        """
+        Fetch the details of a problem in a contest. This includes downloading the problem statement PDF and extracting time/memory limits.
+        Return a dictionary based on the problem_info. No additional keys are required.
+        """
+        raise NotImplementedError
+
+    def fetch_contests(self):
+        # First read local contests file
+        self.contests = self._load_file(self.contests_path)
+
+        # Then fetch contests from the website
+        contest_list = self.fetch_contests_get_contest_list()
+
+        count = 0
+        for contest_info in contest_list[:1]:
+            contest_name = contest_info["name"]
+            contest_date = contest_info["date"]
+            contest_link = contest_info["link"]
+
+            # Create contest folder
+            contest_folder = os.path.join(
+                self.repo_dir, f"{contest_date} {contest_name}"
+            )
+            if os.path.exists(contest_folder):
+                self.log(
+                    "warning",
+                    f"Contest folder already exists: {contest_folder}. Skipped.",
+                )
+                continue
+            else:
+                os.makedirs(contest_folder)
+                self.log("info", f"Created contest folder: {contest_folder}")
+
+            self._write_file(
+                os.path.join(contest_folder, "contest.json"),
+                contest_info,
+            )
+
+            """
+            Process the contest problems
+            """
+            # Create problems folder
+            problems_folder = os.path.join(contest_folder, "problems")
+            os.makedirs(problems_folder)
+
+            problem_list = self.fetch_contests_get_problem_list(
+                contest_info, contest_folder
+            )
+            if not problem_list:
+                self.log(
+                    "error",
+                    f"Failed to fetch problem list for contest {contest_name}. Skipping.",
+                )
+                continue
+
+            problems = []
+            for problem_info in problem_list[:2]:
+                # Create problem folder
+                problem_letter = problem_info["letter"]
+                problem_path = os.path.join(contest_folder, "problems", problem_letter)
+                os.makedirs(problem_path, exist_ok=True)
+
+                problem_link = problem_info["link"]
+                problem_name = problem_info["name"]
+
+                problem_entry = self.fetch_contests_get_problem_details(
+                    problem_info, contest_folder, problem_path
+                )
+                if not problem_entry:
+                    self.log(
+                        "error",
+                        f"Failed to fetch problem details for {problem_name} in {contest_name}.",
+                    )
+                    continue
+                problem_entry["solved"] = False
+
+                problems.append(
+                    {
+                        "letter": problem_letter,
+                        "name": problem_name,
+                        "link": problem_link,
+                        "solved": False,
+                    }
+                )
+                # Write problem.json
+                self._write_file(
+                    os.path.join(problem_path, "problem.json"), problem_entry
+                )
+
+            # Create contest entry
+            contest_entry = {
+                "name": contest_name,
+                "date": contest_date,
+                "link": contest_link,
+                "problems": problems,
+            }
+            self.contests.append(contest_entry)
+
+            # Write the contest entry to the local file
+            self._write_file(self.contests_path, self.contests)
+
+            count += 1
+            print("finished index:", contest_name, count)
+
+    def fetch_submissions(self, since_time=None):
+        raise NotImplementedError

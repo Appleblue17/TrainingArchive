@@ -36,6 +36,11 @@ jobs:
           mkdir -p public/contests
           cp -r contests/* public/contests/
 
+      - name: Print NODE_ENV
+        run: echo $NODE_ENV
+        env:
+          NODE_ENV: production
+
       - name: Build
         run: pnpm build
         env:

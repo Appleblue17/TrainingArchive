@@ -313,8 +313,9 @@ function ContestRow({
             href={contest.link || ""}
             target="_blank"
             rel="noopener noreferrer"
+            title={contest.name}
             onClick={(e) => e.stopPropagation()}
-            className="text-gray-100 transition-colors hover:text-blue-300"
+            className="block overflow-hidden text-ellipsis whitespace-nowrap text-gray-100 transition-colors hover:text-blue-300"
           >
             {contest.name}
           </a>
@@ -350,7 +351,14 @@ function ContestRow({
               </td>
             );
           } else {
-            return <td key={letter} className="border-r border-gray-700 text-center text-base" />;
+            return (
+              <td
+                key={letter}
+                className={clsx("border-r border-gray-700 text-center text-base", {
+                  "border-dashed bg-slate-800/30": pIdx > 13,
+                })}
+              />
+            );
           }
         })}
       </tr>
@@ -410,10 +418,10 @@ export default function ContestTable({ contests }: { contests: ContestInfoType[]
     }
   }, [expandedRow, selectedProblemIdx, selectedFileIdx, contests]);
 
-  const problemLetters = Array.from({ length: 16 }, (_, i) => String.fromCharCode(65 + i));
+  const problemLetters = Array.from({ length: 17 }, (_, i) => String.fromCharCode(65 + i));
 
   return (
-    <table className="w-full table-fixed border-2 border-gray-600 text-sm">
+    <table className="w-[calc(100%+144px)] table-fixed border-2 border-gray-600 text-sm">
       <thead>
         <tr className="border-b-2 border-gray-500">
           <th className="w-32 whitespace-nowrap border-r border-gray-600 bg-gray-800 px-2 py-2 text-center text-gray-200">

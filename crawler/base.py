@@ -249,11 +249,15 @@ class BaseCrawler:
         # Then fetch contests from the website
         contest_list = self.fetch_contests_get_contest_list()
 
-        count = 0
-        for contest_info in contest_list[:1]:
+        for contest_info in contest_list:
             contest_name = contest_info["name"]
             contest_date = contest_info["date"]
             contest_link = contest_info["link"]
+
+            self.log(
+                "info",
+                f"Start processing contest: {contest_name} ({contest_date})",
+            )
 
             # Create contest folder
             contest_folder = os.path.join(
@@ -337,8 +341,161 @@ class BaseCrawler:
             # Write the contest entry to the local file
             self._write_file(self.contests_path, self.contests)
 
-            count += 1
-            print("finished index:", contest_name, count)
+            self.log(
+                "info",
+                f"Finished processing contest: {contest_name} ({contest_date})",
+            )
 
-    def fetch_submissions(self, since_time=None):
+    def fetch_submissions_fetch_source_code(self, entry):
         raise NotImplementedError
+
+    def fetch_submissions_get_submissions(self):
+        raise NotImplementedError
+
+    def _update_submission_status(self, entry):
+        # Try to find it in self.contests by either problem_name or problem_link
+        # If found, write it to the contest/problem folder
+        # Otherwise, write it to local staged-submissions.json
+        ext = self.get_extension_name(entry["language"])
+        filename = f"code.{ext}"
+
+        # Check if the problem has been recorded in any contest
+        name_and_link_matched = []
+        name_matched = []
+        for contest in self.contests:
+            for prob in contest.get("problems", []):
+                if prob["name"] == entry["problem_name"] and prob["link"] == entry.get(
+                    "problem_link"
+                ):
+                    name_and_link_matched.append((contest, prob))
+                elif prob["name"] == entry["problem_name"]:
+                    name_matched.append((contest, prob))
+
+        if name_and_link_matched:
+            found = True
+            contest, prob = name_and_link_matched[0]
+        elif name_matched:
+            found = True
+            contest, prob = name_matched[0]
+        else:
+            found = False
+
+        if found:
+            print("found contest:", contest["name"], "problem:", prob["name"])
+            problem_folder = os.path.join(
+                self.repo_dir,
+                f"{contest['date']} {contest['name']}",
+                "problems",
+                prob["letter"],
+            )
+            # Get if the problem is solved
+            problem_json_path = os.path.join(problem_folder, "problem.json")
+            if not os.path.exists(problem_json_path):
+                self.log(
+                    "error",
+                    f"Problem JSON not found for {prob['name']} in {problem_folder}.",
+                )
+                return False
+
+            with open(problem_json_path, "r", encoding="utf-8") as f:
+                problem_json = json.load(f)
+            problem_solved = problem_json.get("solved", False)
+
+            # Update "submit_time" and code file
+            is_newer = datetime.fromisoformat(
+                entry["submit_time"]
+            ) > datetime.fromisoformat(
+                problem_json.get("submit_time", "1970-01-01T00:00:00")
+            )
+            if not (entry["status"] != "AC" and problem_solved) and (
+                is_newer or (entry.get("status") == "AC" and not problem_solved)
+            ):
+                problem_json["submit_time"] = entry["submit_time"]
+
+                # Fetch code file
+                code = self.fetch_submissions_fetch_source_code(entry)
+
+                # Update source code file
+                os.makedirs(problem_folder, exist_ok=True)
+                file_path = os.path.join(problem_folder, filename)
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(code)
+
+                # Update code.{ext}.json
+                self._write_file(
+                    os.path.join(problem_folder, f"code.{ext}.json"),
+                    entry,
+                )
+
+            # Update problem.json "solved" and "solve_time"
+            if entry["status"] == "AC":
+                problem_json["solved"] = True
+
+                # If problem_json["solve_time"] is not set or later than entry["submit_time"], update it
+                if "solve_time" not in problem_json or datetime.fromisoformat(
+                    entry["submit_time"]
+                ) < datetime.fromisoformat(
+                    problem_json.get("solve_time", "1970-01-01T00:00:00")
+                ):
+                    problem_json["solve_time"] = entry["submit_time"]
+
+            self._write_file(problem_json_path, problem_json)
+            return True
+
+        # If not found, update to staged-submissions.json
+        if not found:
+            # Check if the problem already exists in staged submissions
+            for staged_entry in self.staged_submissions:
+                if staged_entry["problem_name"] == entry["problem_name"]:
+                    if (
+                        entry["status"] == "AC"
+                        or not staged_entry.get("status") == "AC"
+                    ):
+                        # Update the existing entry with the new submission
+                        staged_entry.update(entry)
+                    break
+            else:
+                self.staged_submissions.append(entry)
+                self._write_file(self.submissions_path, self.staged_submissions)
+            return False
+
+    def _register_submission(self, submission_entry):
+        """
+        Register a submission entry. This method is called after fetching each submission.
+        Return a boolean indicating whether to stop fetching submissions.
+        """
+        submit_time = datetime.fromisoformat(submission_entry["submit_time"])
+        submission_id = submission_entry["submission_id"]
+
+        if submit_time < self.last_update_time:
+            self.log(
+                "info",
+                f"Reached last update (Submission {submission_id}), stopping.",
+            )
+            return True
+
+        self._update_submission_status(submission_entry)
+        return False
+
+    def fetch_submissions(self):
+        # Load last update time and staged submissions
+        self.last_update = self._load_file(self.last_update_path, default={})
+        last_update_time_str = self.last_update.get("qoj", "1970-01-01T00:00:00")
+        self.last_update_time = datetime.fromisoformat(last_update_time_str)
+
+        self.contests = self._load_file(self.contests_path)
+        self.staged_submissions = self._load_file(self.submissions_path)
+
+        # First try updating existing staged submissions
+        new_staged = []
+        for entry in self.staged_submissions:
+            if not self._update_submission_status(entry):
+                new_staged.append(entry)
+        self.staged_submissions = new_staged
+        self._write_file(self.submissions_path, self.staged_submissions)
+
+        # Fetch new submissions
+        self.fetch_submissions_get_submissions()
+
+        self.last_update[self.platform_name] = datetime.now().isoformat()
+        self._write_file(self.last_update_path, self.last_update)

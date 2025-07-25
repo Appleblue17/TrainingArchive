@@ -42,3 +42,15 @@ next-env.d.ts
 
 # contest source
 /public/contests
+
+# python
+.venv
+__pycache__/
+
+# crawler
+crawler/*/log.json
+crawler/global.log.json
+crawler/last-update.json
+crawler/chrome-linux
+crawler/chromedriver_linux64
+contests/

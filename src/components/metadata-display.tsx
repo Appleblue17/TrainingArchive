@@ -46,7 +46,7 @@ export default function MetaDataDisplay({
   return (
     <div className="overflow-auto">
       {name && <h2 className="px-1 py-1 text-sm font-medium text-gray-300">{name}</h2>}
-      <div className="rounded border-2 border-gray-400 bg-black/80 p-3 font-mono text-sm text-green-300">
+      <div className="rounded border-2 border-gray-400 bg-black/80 px-2 py-3 font-mono text-sm text-green-300">
         {Object.entries(metadata).map(([key, value]) => {
           if (metadataBanner.includes(key)) {
             return null; // Skip keys in the banner
@@ -55,16 +55,21 @@ export default function MetaDataDisplay({
           let valueDisplay;
           if (key === "size" && typeof value === "number") {
             valueDisplay = <span className="text-yellow-400">{formatSize(value)}</span>;
-          } else if (key.includes("time_limit") && typeof value === "number") {
-            // unit: seconds
-            valueDisplay = <span className="text-yellow-400">{value} s</span>;
-          } else if (key.includes("memory_limit") && typeof value === "number") {
-            // unit: kilobytes
-            valueDisplay = <span className="text-yellow-400">{value} MB</span>;
+          } else if (key.includes("time_limit")) {
+            if (typeof value === "number")
+              valueDisplay = <span className="text-yellow-400">{value} s</span>;
+            else valueDisplay = <span className="text-yellow-400">{String(value)}</span>;
+          } else if (key.includes("memory_limit")) {
+            if (typeof value === "number")
+              valueDisplay = <span className="text-yellow-400">{value} MB</span>;
+            else valueDisplay = <span className="text-yellow-400">{String(value)}</span>;
           } else if (key.includes("time")) {
             valueDisplay = <span className="text-pink-400">{formatDate(value)}</span>;
-          } else if (key.includes("date") || key.includes("duration")) {
-            valueDisplay = <span className="text-pink-400">{formatDate(value)}</span>;
+          } else if (
+            (key.includes("date") || key.includes("duration")) &&
+            typeof value === "string"
+          ) {
+            valueDisplay = <span className="text-pink-400">{value}</span>;
           } else if (key.includes("link") && typeof value === "string") {
             valueDisplay = (
               <a

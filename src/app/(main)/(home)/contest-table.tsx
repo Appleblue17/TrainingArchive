@@ -315,7 +315,7 @@ function ContestRow({
             rel="noopener noreferrer"
             title={contest.name}
             onClick={(e) => e.stopPropagation()}
-            className="block overflow-hidden text-ellipsis whitespace-nowrap text-gray-100 transition-colors hover:text-blue-300"
+            className="break-keep text-gray-100 transition-colors hover:text-blue-300"
           >
             {contest.name}
           </a>

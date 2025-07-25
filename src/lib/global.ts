@@ -1,5 +1,10 @@
-export const BASE_URL = "http://localhost:3000/";
-export const PREFIX_URL = "/";
+const isProd = process.env.NODE_ENV === "production";
+
+export const BASE_URL = isProd
+  ? "https://appleblue17.github.io/Training-Archive/"
+  : "http://localhost:3000/";
+
+export const PREFIX_URL = isProd ? "/Training-Archive" : "/";
 
 export const allowedExtensions = [
   ".pdf",

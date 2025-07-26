@@ -95,8 +95,17 @@ class BaseCrawler:
 
     def init_driver(self):
         options = uc.ChromeOptions()
-        # Specify the path to the Chromium executable
-        options.binary_location = os.path.abspath("crawler/chrome-linux/chrome")
+        if os.environ.get("GITHUB_ACTIONS"):
+            # On GitHub Actions, use system chromium/chromedriver
+            options.binary_location = None
+            chromedriver_path = None
+        else:
+            # Specify the path to the Chromium executable
+            options.binary_location = os.path.abspath("crawler/chrome-linux/chrome")
+            chromedriver_path = os.path.abspath(
+                "crawler/chromedriver_linux64/chromedriver"
+            )
+
         # Set preferences
         prefs = {
             "download.prompt_for_download": False,
@@ -108,7 +117,6 @@ class BaseCrawler:
         options.add_experimental_option("prefs", prefs)
 
         options.add_argument("--headless")  # Uncomment for headless mode
-        chromedriver_path = os.path.abspath("crawler/chromedriver_linux64/chromedriver")
         try:
             self.driver = uc.Chrome(
                 options=options, driver_executable_path=chromedriver_path

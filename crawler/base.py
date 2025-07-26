@@ -97,8 +97,8 @@ class BaseCrawler:
         options = uc.ChromeOptions()
         if os.environ.get("GITHUB_ACTIONS"):
             # On GitHub Actions, use system chromium/chromedriver
-            options.binary_location = None
-            chromedriver_path = None
+            options.binary_location = os.environ.get("CHROME_BINARY")
+            chromedriver_path = os.environ.get("CHROMEDRIVER_PATH")
         else:
             # Specify the path to the Chromium executable
             options.binary_location = os.path.abspath("crawler/chrome-linux/chrome")

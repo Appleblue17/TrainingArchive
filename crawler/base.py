@@ -4,7 +4,10 @@ import json
 import random
 import shutil
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+
+beijing = timezone(timedelta(hours=8))
+now = datetime.now(beijing)
 import os
 import undetected_chromedriver as uc
 
@@ -197,7 +200,7 @@ class BaseCrawler:
         important/error -> local + global log
         """
         log_entry = {
-            "time": datetime.now().isoformat(),
+            "time": datetime.now(beijing).isoformat(),
             "level": level,
             "platform": self.platform_name,
             "msg": msg,
@@ -502,5 +505,5 @@ class BaseCrawler:
         # Fetch new submissions
         self.fetch_submissions_get_submissions()
 
-        self.last_update[self.platform_name] = datetime.now().isoformat()
+        self.last_update[self.platform_name] = datetime.now(beijing).isoformat()
         self._write_file(self.last_update_path, self.last_update)

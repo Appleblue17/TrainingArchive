@@ -3,7 +3,10 @@ import sys
 import os
 import json
 from bs4 import BeautifulSoup as bs4
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+beijing = timezone(timedelta(hours=8))
+now = datetime.now(beijing)
 from urllib.parse import urljoin
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -364,7 +367,9 @@ class QOJCrawler(BaseCrawler):
 if __name__ == "__main__":
     crawler = QOJCrawler()
     try:
-        crawler.log("important", "QOJ Crawler started at " + datetime.now().isoformat())
+        crawler.log(
+            "important", "QOJ Crawler started at " + datetime.now(beijing).isoformat()
+        )
         crawler.login()
         crawler.fetch_contests()
         crawler.log("info", "Contests fetched successfully.")
@@ -372,7 +377,7 @@ if __name__ == "__main__":
         crawler.log("info", "Submissions fetched successfully.")
         crawler.log(
             "important",
-            "QOJ Crawler finished successfully at " + datetime.now().isoformat(),
+            "QOJ Crawler finished successfully at " + datetime.now(beijing).isoformat(),
         )
     except Exception as e:
         crawler.log("fatal", f"An error occurred: {e}")

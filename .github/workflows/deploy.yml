@@ -7,9 +7,14 @@ on:
       - deploy
     paths:
       - "contests/**"
+  workflow_run:
+    workflows: ["Crawler Workflow"]
+    types:
+      - completed
 
 jobs:
   deploy:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -20,6 +25,26 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: deploy
+
+      - name: Check if contests changed
+        id: check_commit
+        run: |
+          git fetch
+          git log -1 --pretty=%B > last_commit_msg.txt
+          cat last_commit_msg.txt
+          if grep -q '\[contests-changed\]' last_commit_msg.txt; then
+            echo "contests_changed=true" >> $GITHUB_ENV
+            echo "Detected changes in contests directory. Will proceed with deployment."
+          else
+            echo "contests_changed=false" >> $GITHUB_ENV
+            echo "No changes detected in contests directory. Skipping deployment."
+          fi
+
+      - name: Skip deploy if contests did not change
+        if: github.event_name == 'workflow_run' && env.contests_changed == 'false'
+        run: |
+          echo "No changes in contests, skipping deploy."
+          exit 0
 
       - uses: pnpm/action-setup@v2
         with:

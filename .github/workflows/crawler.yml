@@ -53,14 +53,25 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add crawler contests
-          git reset crawler/chromedriver_linux64/chromedriver
-          git status
+          git reset HEAD crawler/chromedriver_linux64/chromedriver
           git diff --cached --stat
+
+      - name: Check if contests changed
+        id: check_contests
+        run: |
+          if git diff --cached --name-only | grep '^contests/'; then
+            echo "contests_changed=true" >> $GITHUB_ENV
+            echo "Detected changes in contests directory."
+          else
+            echo "contests_changed=false" >> $GITHUB_ENV
+            echo "No changes detected in contests directory."
+          fi
 
       - name: Commit and push changes
         run: |
-          git commit -m "[auto] Update contest and submission data"
+          if [ "$contests_changed" = "true" ]; then
+            git commit -m "[auto] [contests-changed] Update contest and submission data"
+          else
+            git commit -m "[auto] Update contest and submission data"
+          fi
           git push
-
-      - name: Congratulate the bot
-        run: echo "Congratulations! The bot has successfully completed the crawl and updated the data."

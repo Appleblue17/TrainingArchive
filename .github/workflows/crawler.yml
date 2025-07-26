@@ -25,6 +25,11 @@ jobs:
           echo ${{ steps.setup-chrome.outputs.chromedriver-path }}
           ${{ steps.setup-chrome.outputs.chromedriver-path }} --version
 
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r crawler/qoj/requirements.txt
+
       - name: Run QOJ Crawler
         run: python3 crawler/qoj/qoj.py
         env:

@@ -13,13 +13,10 @@ on:
       - completed
 
 jobs:
-  deploy:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+  check_contests:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+    outputs:
+      should_deploy: ${{ steps.check_commit.outputs.should_deploy }}
     steps:
       - name: Checkout deploy branch
         uses: actions/checkout@v4
@@ -33,18 +30,24 @@ jobs:
           git log -1 --pretty=%B > last_commit_msg.txt
           cat last_commit_msg.txt
           if grep -q '\[contests-changed\]' last_commit_msg.txt; then
-            echo "contests_changed=true" >> $GITHUB_ENV
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
             echo "Detected changes in contests directory. Will proceed with deployment."
           else
-            echo "contests_changed=false" >> $GITHUB_ENV
-            echo "No changes detected in contests directory. Skipping deployment."
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            echo "No changes detected in contests directory. Will skip deployment."
           fi
 
-      - name: Skip deploy if contests did not change
-        if: github.event_name == 'workflow_run' && env.contests_changed == 'false'
-        run: |
-          echo "No changes in contests, skipping deploy."
-          exit 0
+  deploy:
+    needs: check_contests
+    if: needs.check_contests.outputs.should_deploy == 'true' || github.event_name != 'workflow_run'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout deploy branch
+        uses: actions/checkout@v4
+        with:
+          ref: deploy
 
       - uses: pnpm/action-setup@v2
         with:

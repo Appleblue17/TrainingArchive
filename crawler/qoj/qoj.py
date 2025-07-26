@@ -1,9 +1,11 @@
 import re
 import sys
 import os
-import json
 from bs4 import BeautifulSoup as bs4
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+beijing = timezone(timedelta(hours=8))
+now = datetime.now(beijing)
 from urllib.parse import urljoin
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -88,7 +90,7 @@ class QOJCrawler(BaseCrawler):
             # Contest start time is in cols[1]
             # Format: YYYY-MM-DD HH:MM:SS
             contest_start_time = cols[1].find("a").text.strip()
-            start_time = datetime.strptime(contest_start_time, "%Y-%m-%d %H:%M:%S")
+            start_time = self._convert_iso_to_beijing(contest_start_time)
             date = start_time.date()
 
             # Contest duration is in cols[2]
@@ -336,9 +338,7 @@ class QOJCrawler(BaseCrawler):
                 memory = cols[5].text.strip()
                 language = cols[6].text.strip()
 
-                submit_time = datetime.strptime(
-                    cols[8].text.strip(), "%Y-%m-%d %H:%M:%S"
-                )
+                submit_time = self._convert_iso_to_beijing(cols[8].text.strip())
 
                 submission_entry = {
                     "submission_id": submission_id,
@@ -364,7 +364,9 @@ class QOJCrawler(BaseCrawler):
 if __name__ == "__main__":
     crawler = QOJCrawler()
     try:
-        crawler.log("important", "QOJ Crawler started at " + datetime.now().isoformat())
+        crawler.log(
+            "important", "QOJ Crawler started at " + datetime.now(beijing).isoformat()
+        )
         crawler.login()
         crawler.fetch_contests()
         crawler.log("info", "Contests fetched successfully.")
@@ -372,7 +374,7 @@ if __name__ == "__main__":
         crawler.log("info", "Submissions fetched successfully.")
         crawler.log(
             "important",
-            "QOJ Crawler finished successfully at " + datetime.now().isoformat(),
+            "QOJ Crawler finished successfully at " + datetime.now(beijing).isoformat(),
         )
     except Exception as e:
         crawler.log("fatal", f"An error occurred: {e}")

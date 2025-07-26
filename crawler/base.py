@@ -4,7 +4,10 @@ import json
 import random
 import shutil
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+
+beijing = timezone(timedelta(hours=8))
+now = datetime.now(beijing)
 import os
 import undetected_chromedriver as uc
 
@@ -36,7 +39,7 @@ class BaseCrawler:
         sleep_time = random.uniform(self.min_wait_time, self.max_wait_time)
         time.sleep(sleep_time)
 
-    def get_extension_name(self, language):
+    def _get_extension_name(self, language):
         language = language.lower()
         if "c++" in language or "cpp" in language:
             return "cpp"
@@ -58,6 +61,17 @@ class BaseCrawler:
             return "d"
         # fallback
         return "txt"
+
+    # Convert to beijing time
+    def _convert_to_beijing_time(self, dt):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(beijing)
+
+    # From ISO format to beijing time
+    def _convert_iso_to_beijing(self, iso_str):
+        dt = datetime.fromisoformat(iso_str)
+        return self._convert_to_beijing_time(dt)
 
     def _load_file(self, path, default=[]):
         if not os.path.exists(path):
@@ -197,7 +211,7 @@ class BaseCrawler:
         important/error -> local + global log
         """
         log_entry = {
-            "time": datetime.now().isoformat(),
+            "time": datetime.now(beijing).isoformat(),
             "level": level,
             "platform": self.platform_name,
             "msg": msg,
@@ -362,7 +376,7 @@ class BaseCrawler:
         # Try to find it in self.contests by either problem_name or problem_link
         # If found, write it to the contest/problem folder
         # Otherwise, write it to local staged-submissions.json
-        ext = self.get_extension_name(entry["language"])
+        ext = self._get_extension_name(entry["language"])
         filename = f"code.{ext}"
 
         # Check if the problem has been recorded in any contest
@@ -407,9 +421,9 @@ class BaseCrawler:
             problem_solved = problem_json.get("solved", False)
 
             # Update "submit_time" and code file
-            is_newer = datetime.fromisoformat(
+            is_newer = self._convert_iso_to_beijing(
                 entry["submit_time"]
-            ) > datetime.fromisoformat(
+            ) > self._convert_iso_to_beijing(
                 problem_json.get("submit_time", "1970-01-01T00:00:00")
             )
             if not (entry["status"] != "AC" and problem_solved) and (
@@ -437,9 +451,10 @@ class BaseCrawler:
                 problem_json["solved"] = True
 
                 # If problem_json["solve_time"] is not set or later than entry["submit_time"], update it
-                if "solve_time" not in problem_json or datetime.fromisoformat(
+
+                if "solve_time" not in problem_json or self._convert_iso_to_beijing(
                     entry["submit_time"]
-                ) < datetime.fromisoformat(
+                ) < self._convert_iso_to_beijing(
                     problem_json.get("solve_time", "1970-01-01T00:00:00")
                 ):
                     problem_json["solve_time"] = entry["submit_time"]
@@ -469,7 +484,7 @@ class BaseCrawler:
         Register a submission entry. This method is called after fetching each submission.
         Return a boolean indicating whether to stop fetching submissions.
         """
-        submit_time = datetime.fromisoformat(submission_entry["submit_time"])
+        submit_time = self._convert_iso_to_beijing(submission_entry["submit_time"])
         submission_id = submission_entry["submission_id"]
 
         if submit_time < self.last_update_time:
@@ -486,7 +501,7 @@ class BaseCrawler:
         # Load last update time and staged submissions
         self.last_update = self._load_file(self.last_update_path, default={})
         last_update_time_str = self.last_update.get("qoj", "1970-01-01T00:00:00")
-        self.last_update_time = datetime.fromisoformat(last_update_time_str)
+        self.last_update_time = self._convert_iso_to_beijing(last_update_time_str)
 
         self.contests = self._load_file(self.contests_path)
         self.staged_submissions = self._load_file(self.submissions_path)
@@ -502,5 +517,5 @@ class BaseCrawler:
         # Fetch new submissions
         self.fetch_submissions_get_submissions()
 
-        self.last_update[self.platform_name] = datetime.now().isoformat()
+        self.last_update[self.platform_name] = datetime.now(beijing).isoformat()
         self._write_file(self.last_update_path, self.last_update)

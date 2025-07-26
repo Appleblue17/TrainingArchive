@@ -98,13 +98,10 @@ class BaseCrawler:
         if os.environ.get("GITHUB_ACTIONS"):
             # On GitHub Actions, use system chromium/chromedriver
             options.binary_location = os.environ.get("CHROME_BINARY")
-            chromedriver_path = os.environ.get("CHROMEDRIVER_PATH")
         else:
             # Specify the path to the Chromium executable
             options.binary_location = os.path.abspath("crawler/chrome-linux/chrome")
-            chromedriver_path = os.path.abspath(
-                "crawler/chromedriver_linux64/chromedriver"
-            )
+        chromedriver_path = os.path.abspath("crawler/chromedriver_linux64/chromedriver")
 
         # Set preferences
         prefs = {
@@ -205,6 +202,9 @@ class BaseCrawler:
             "platform": self.platform_name,
             "msg": msg,
         }
+        print(
+            f"[{log_entry['time']}] [{log_entry['level'].upper()}] {log_entry['msg']}"
+        )
         # write local log
         self._append_file(self.local_log_path, log_entry)
         # write global log (only for important/error)

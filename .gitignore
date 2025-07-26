@@ -49,7 +49,6 @@ __pycache__/
 
 # crawler
 crawler/chrome-linux
-crawler/chromedriver_linux64
 
 # test script
 *test.sh

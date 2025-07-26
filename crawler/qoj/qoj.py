@@ -42,6 +42,13 @@ class QOJCrawler(BaseCrawler):
     def login(self):
         username = os.getenv("QOJ_USERNAME")
         password = os.getenv("QOJ_PASSWORD")
+        if not username or not password:
+            self.log(
+                "fatal",
+                "Username or password not found in environment variables. Stopped.",
+            )
+            return
+
         if self.try_login_with_password(username, password):
             self.log("info", "Login successful with username and password.")
             return

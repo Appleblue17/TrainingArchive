@@ -9,7 +9,10 @@ jobs:
   check-chromium:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout deploy branch
+        uses: actions/checkout@v4
+        with:
+          ref: deploy
 
       - name: Setup Chrome 120 with browser-actions/setup-chrome
         uses: browser-actions/setup-chrome@v1

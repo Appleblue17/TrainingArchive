@@ -1,12 +1,12 @@
 name: Deploy to GitHub Pages
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - master
+      - deploy
     paths:
       - "contests/**"
-  workflow_dispatch:
 
 jobs:
   deploy:
@@ -16,7 +16,10 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout deploy branch
+        uses: actions/checkout@v4
+        with:
+          ref: deploy
 
       - uses: pnpm/action-setup@v2
         with:

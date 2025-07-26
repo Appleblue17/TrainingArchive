@@ -1,0 +1,50 @@
+[
+  {
+    "time": "2025-07-26T18:54:50.910186+08:00",
+    "level": "warning",
+    "platform": "qoj",
+    "msg": "Download directory does not exist, creating it."
+  },
+  {
+    "time": "2025-07-26T18:54:51.421726+08:00",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler started at 2025-07-26T18:54:51.421709+08:00"
+  },
+  {
+    "time": "2025-07-26T18:55:07.190846+08:00",
+    "level": "info",
+    "platform": "qoj",
+    "msg": "Login successful with username and password."
+  },
+  {
+    "time": "2025-07-26T18:55:11.697916+08:00",
+    "level": "info",
+    "platform": "qoj",
+    "msg": "Contests fetched successfully."
+  },
+  {
+    "time": "2025-07-26T18:55:11.700058+08:00",
+    "level": "info",
+    "platform": "qoj",
+    "msg": "Start fetching submissions from page 1."
+  },
+  {
+    "time": "2025-07-26T18:55:19.111731+08:00",
+    "level": "info",
+    "platform": "qoj",
+    "msg": "Reached last update (Submission #1176419), stopping."
+  },
+  {
+    "time": "2025-07-26T18:55:19.112110+08:00",
+    "level": "info",
+    "platform": "qoj",
+    "msg": "Submissions fetched successfully."
+  },
+  {
+    "time": "2025-07-26T18:55:19.112356+08:00",
+    "level": "important",
+    "platform": "qoj",
+    "msg": "QOJ Crawler finished successfully at 2025-07-26T18:55:19.112349+08:00"
+  }
+]

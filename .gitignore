@@ -48,9 +48,11 @@ next-env.d.ts
 __pycache__/
 
 # crawler
-crawler/*/log.json
-crawler/global.log.json
-crawler/last-update.json
+contests/
 crawler/chrome-linux
 crawler/chromedriver_linux64
-contests/
+crawler/global.log.json
+crawler/last-update.json
+crawler/*/contests.json
+crawler/*/staged-submissions.json
+crawler/*/log.json

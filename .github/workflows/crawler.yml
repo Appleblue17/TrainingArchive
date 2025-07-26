@@ -38,6 +38,8 @@ jobs:
         env:
           CHROME_BINARY: ${{ steps.setup-chrome.outputs.chrome-path }}
           CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+          QOJ_USERNAME: ${{ secrets.QOJ_USERNAME }}
+          QOJ_PASSWORD: ${{ secrets.QOJ_PASSWORD }}
 
       - name: Commit and push changes
         run: |

@@ -1,1 +1,0 @@
-self.__SSG_MANIFEST=new Set(["\u002Fview\u002Fcontests\u002F[contest]\u002F[file]","\u002Fview\u002Fcontests\u002F[contest]\u002Fproblems\u002F[problem]\u002F[file]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()

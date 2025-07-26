@@ -45,10 +45,18 @@ jobs:
           QOJ_USERNAME: ${{ secrets.QOJ_USERNAME }}
           QOJ_PASSWORD: ${{ secrets.QOJ_PASSWORD }}
 
-      - name: Commit and push changes
+      - name: Add and show changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add crawler contests
+          git status
+          git diff --cached
+
+      - name: Commit and push changes
+        run: |
           git commit -m "[auto] Update contest and submission data"
           git push
+
+      - name: Congratulate the bot
+        run: echo "Congratulations! The bot has successfully completed the crawl and updated the data."

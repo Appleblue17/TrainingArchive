@@ -9,10 +9,10 @@ jobs:
   check-chromium:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Chrome 114 with browser-actions/setup-chrome
+      - name: Setup Chrome 120 with browser-actions/setup-chrome
         uses: browser-actions/setup-chrome@v1
         with:
-          chrome-version: 114
+          chrome-version: 120
           install-chromedriver: true
 
       - name: Show chromium-browser and chromedriver version after setup

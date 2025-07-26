@@ -5,9 +5,6 @@ import json
 from bs4 import BeautifulSoup as bs4
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
-from dotenv import load_dotenv
-
-load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from crawler.base import BaseCrawler

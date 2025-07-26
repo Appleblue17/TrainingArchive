@@ -56,3 +56,6 @@ crawler/last-update.json
 crawler/*/contests.json
 crawler/*/staged-submissions.json
 crawler/*/log.json
+
+# test script
+*test.sh

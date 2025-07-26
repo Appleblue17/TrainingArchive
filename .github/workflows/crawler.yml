@@ -9,6 +9,8 @@ jobs:
   crawl:
     runs-on: ubuntu-latest
     environment: archive-crawler
+    env:
+      TZ: Asia/Shanghai
     steps:
       - name: Checkout deploy branch
         uses: actions/checkout@v4
@@ -40,6 +42,7 @@ jobs:
       - name: Run QOJ Crawler
         run: python3 crawler/qoj/qoj.py
         env:
+          PYTHONUNBUFFERED: "1"
           CHROME_BINARY: ${{ steps.setup-chrome.outputs.chrome-path }}
           CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
           QOJ_USERNAME: ${{ secrets.QOJ_USERNAME }}
@@ -50,8 +53,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add crawler contests
+          git reset crawler/chromedriver_linux64/chromedriver
           git status
-          git diff --cached
+          git diff --cached --stat
 
       - name: Commit and push changes
         run: |

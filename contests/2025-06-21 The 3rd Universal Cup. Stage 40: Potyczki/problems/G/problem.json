@@ -3,5 +3,7 @@
   "name": "Furniture",
   "time_limit": "0.5 s",
   "memory_limit": "1024 MB",
-  "solved": false
+  "solved": true,
+  "submit_time": "2025-07-27T03:33:34+08:00",
+  "solve_time": "2025-07-27T03:33:34+08:00"
 }

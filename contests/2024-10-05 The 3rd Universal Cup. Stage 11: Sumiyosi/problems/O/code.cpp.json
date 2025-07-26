@@ -1,11 +1,11 @@
 {
-  "submission_id": "#615258",
+  "submission_id": "#1182316",
   "problem_name": "New School Term",
-  "status": "WA",
-  "time": "4ms",
-  "memory": "18216kb",
-  "language": "C++14",
-  "submit_time": "2024-10-05T17:56:48",
+  "status": "AC",
+  "time": "471ms",
+  "memory": "13728kb",
+  "language": "C++20",
+  "submit_time": "2025-07-26T12:53:53",
   "problem_link": "https://qoj.ac/contest/1804/problem/9449",
-  "submission_link": "https://qoj.ac/submission/615258"
+  "submission_link": "https://qoj.ac/submission/1182316"
 }
